@@ -4,7 +4,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
     include("models.jl") 
 end
 
-# module MyGui
+module MyGui
+    export aaa
+    export start_render_loop!
     using CImGui
 
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
@@ -13,7 +15,7 @@ end
     using .Renderer
 
 
-    using .MyModels
+    using ..MyModels
 
 
     function drawAgent!(draw_list, aAgent::Agent)
@@ -155,9 +157,9 @@ end
         #!isinteractive() && wait(t_update)
     end 
 
-# end
+end
     
 if abspath(PROGRAM_FILE) == @__FILE__
-    # using .MyGui
+    using .MyGui
     aaa()
 end
