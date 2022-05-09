@@ -1,6 +1,14 @@
 
 
+# include("models.jl")
+# using ..models
+
+
 include("gui.jl")
+
+# using ..MyCimGui: start_render_loop!  as my_renderloop
+
+# using ..MyCimGui
 
 
 lk_sim = ReentrantLock()
@@ -37,7 +45,6 @@ function simWork!(simState::SimulationState, ctrlState::ControlState)
         simState.last_frame_time_ms = elapsed_time/1000
         time_to_wait_s = (ctrlState.min_frametime_ms - simState.last_frame_time_ms) / 1000
         if time_to_wait_s>0
-            @show time_to_wait_s
             sleep(time_to_wait_s)
             new_time = Base.time_ns()
         end
@@ -77,30 +84,41 @@ function infinite_loop(ctrlState::ControlState, sim_state_to_gui::Ref{Simulation
     end
 end
 
-println("running gui with some dummy-data for debugging...")
 
-ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0)
-sim_state_from_sim = SimulationState(
-    1, 
-    Agent(0.3, 0.3, 0.9, 0.1),
-    Agent(0.6, 0.6, 0.9, 0.1),
-    0.0
-)
-ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
-
-println("starting render loop...")
-t_render = Renderer.render(()->ui(ctrlState, ref_sim_state_to_gui), width = 800, height = 600, title = "A simple UI")
-println("starting dummy update loop...")
-
-t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
+function main()
 
 
-workThread = Threads.@spawn simWork!($sim_state_from_sim, $ctrlState)
+    println("running gui with some dummy-data for debugging...")
 
-@show Threads.nthreads() Threads.threadid()
+    ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0)
+    sim_state_from_sim = SimulationState(
+        1, 
+        Agent(0.3, 0.3, 0.9, 0.1),
+        Agent(0.6, 0.6, 0.9, 0.1),
+        0.0
+    )
+    ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
 
-!isinteractive() && wait(t_render)
-ctrlState.is_stop = true
-!isinteractive() && wait(t_update)
-ctrlState.is_stop = true
-wait(workThread)
+    println("starting render loop...")
+    
+    # t_render = Renderer.render(()->ui(ctrlState, ref_sim_state_to_gui), width = 800, height = 600, title = "A simple UI")
+    
+    t_render = start_render_loop!(ctrlState, ref_sim_state_to_gui)
+    println("starting dummy update loop...")
+
+    t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
+
+
+    workThread = Threads.@spawn simWork!($sim_state_from_sim, $ctrlState)
+
+    @show Threads.nthreads() Threads.threadid()
+
+    !isinteractive() && wait(t_render)
+    ctrlState.is_stop = true
+    !isinteractive() && wait(t_update)
+    ctrlState.is_stop = true
+    wait(workThread)
+
+    end 
+
+main()
