@@ -23,18 +23,18 @@ module MyMain
         end
     end
 
-    function update_from_sim!(sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::SimulationState)
+    function update_from_sim!(sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::Ref{SimulationState})
         
         lock(lk_sim)
         try
-            sim_state_to_gui[] =  deepcopy(sim_state_from_sim)
+            sim_state_to_gui[] =  deepcopy(sim_state_from_sim[])
         finally
             unlock(lk_sim)
         end
     end
 
 
-    function infinite_loop(ctrlState::ControlState, sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::SimulationState)
+    function infinite_loop(ctrlState::ControlState, sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::Ref{SimulationState})
         ctrlState.is_stop = false
         @async while true
             ctrlState.is_stop && break
@@ -58,15 +58,16 @@ module MyMain
             0.0
         )
         ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
+        ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 
         @info "starting render loop..."
         t_render = start_render_loop!(ctrlState, ref_sim_state_to_gui)
         @info "starting dummy update loop..."
 
 
-        t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
+        t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, ref_sim_state_to_simulation)
 
-        workThread = Threads.@spawn simulationLoop!($sim_state_from_sim, $ctrlState)
+        workThread = Threads.@spawn simulationLoop!($ref_sim_state_to_simulation, $ctrlState)
 
         @info Threads.nthreads() Threads.threadid()
 

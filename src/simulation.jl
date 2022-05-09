@@ -8,10 +8,10 @@ module MySimulation
 
     using ..MyModels
 
-    function simulationLoop!(simState::SimulationState, ctrlState::ControlState)
+    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::ControlState)
         @info "simulationLoop!..."
 
-        
+        simState = deepcopy(simState_transfer[])
         last_time = Base.time_ns()
         while !ctrlState.is_stop
             simState.num_age += 1
@@ -23,6 +23,8 @@ module MySimulation
                 simState.agent1.pos_x -= 0.01
                 simState.agent1.pos_y -= 0.01
             end
+            
+            simState_transfer[] = deepcopy(simState)
             new_time = Base.time_ns()
             elapsed_time = new_time-last_time
             simState.last_frame_time_ms = elapsed_time/1000
@@ -32,6 +34,8 @@ module MySimulation
                 new_time = Base.time_ns()
             end
             last_time = new_time
+
+            
         end
     
         @info "simulationLoop!... done"
@@ -51,7 +55,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         @info "stop_after... done" 
     end
     ctrlThread = Threads.@spawn stop_after(1.0)
-    simulationLoop!(simState, ctrlState)
+    simulationLoop!(Ref(simState), ctrlState)
     wait(ctrlThread)
     @info simState
 end
