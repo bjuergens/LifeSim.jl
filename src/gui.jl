@@ -1,4 +1,10 @@
 
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    include("models.jl") 
+end
+
+# module MyGui
     using CImGui
 
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
@@ -7,7 +13,6 @@
     using .Renderer
 
 
-    include("models.jl") 
     using .MyModels
 
 
@@ -131,7 +136,6 @@
         function infinite_loop(state::ControlState)
             state.is_stop = false
             @async while true
-                @show state.is_stop
                 state.is_stop && break
                 push!(state.arr, popat!(state.arr, 1) * state.afloat)
                 yield()
@@ -151,9 +155,9 @@
         #!isinteractive() && wait(t_update)
     end 
 
-
+# end
+    
 if abspath(PROGRAM_FILE) == @__FILE__
-    # using .MyCimGui
-    # MyCimGui.aaa()
+    # using .MyGui
     aaa()
 end

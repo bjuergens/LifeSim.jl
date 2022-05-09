@@ -1,7 +1,5 @@
 
-    println("exec models.jl")
 module MyModels
-println("exec models.jl/module")
     export Agent
     export SimulationState, ControlState
 

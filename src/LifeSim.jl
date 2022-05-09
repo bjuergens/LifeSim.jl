@@ -1,6 +1,6 @@
 
 
-# include("models.jl")
+include("models.jl")
 # using ..models
 
 
@@ -14,16 +14,6 @@ include("gui.jl")
 lk_sim = ReentrantLock()
 lk_ctrl = ReentrantLock()
 
-function update!(state::ControlState)
-    
-    lock(lk_sim)
-    try
-        state_copy = deepcopy(state)
-        push!(state.arr, popat!(state.arr, 51) * state.afloat)
-    finally
-        unlock(lk_sim)
-    end
-end
 
 
 function simWork!(simState::SimulationState, ctrlState::ControlState)
@@ -32,8 +22,7 @@ function simWork!(simState::SimulationState, ctrlState::ControlState)
     while !ctrlState.is_stop
         simState.num_age += 1
 
-        aaa = mod(floor(simState.num_age / 10), 2)
-        if (aaa == 0)
+        if ( 0 == mod(floor(simState.num_age / 10), 2))
             simState.agent1.pos_x += 0.01
             simState.agent1.pos_y += 0.01
         else
@@ -53,8 +42,7 @@ function simWork!(simState::SimulationState, ctrlState::ControlState)
 end
 
 
-function update!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
-    
+function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
     lock(lk_ctrl)
     try
         ctrl_state_to_sim[] =  deepcopy(ctrl_state_from_sim)
@@ -63,7 +51,7 @@ function update!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::Cont
     end
 end
 
-function update!(sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::SimulationState)
+function update_from_sim!(sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::SimulationState)
     
     lock(lk_sim)
     try
@@ -78,8 +66,7 @@ function infinite_loop(ctrlState::ControlState, sim_state_to_gui::Ref{Simulation
     ctrlState.is_stop = false
     @async while true
         ctrlState.is_stop && break
-        update!(ctrlState)
-        update!(sim_state_to_gui, sim_state_from_sim)
+        update_from_sim!(sim_state_to_gui, sim_state_from_sim)
         yield()
     end
 end
@@ -87,6 +74,7 @@ end
 
 function main()
 
+    # todo: safe copy controlstate to worker in the same safe way as the other way
 
     println("running gui with some dummy-data for debugging...")
 
@@ -99,15 +87,12 @@ function main()
     )
     ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
 
-    println("starting render loop...")
-    
-    # t_render = Renderer.render(()->ui(ctrlState, ref_sim_state_to_gui), width = 800, height = 600, title = "A simple UI")
-    
+    println("starting render loop...")    
     t_render = start_render_loop!(ctrlState, ref_sim_state_to_gui)
     println("starting dummy update loop...")
 
-    t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
 
+    t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
 
     workThread = Threads.@spawn simWork!($sim_state_from_sim, $ctrlState)
 
