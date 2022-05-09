@@ -15,6 +15,8 @@ module MyModels
         agent1::Agent
         agent2::Agent
         last_frame_time_ms::Float64
+        SimulationState(num_age::Int, agent1::Agent, agent2::Agent, last_frame_time_ms::Float64) = new(num_age, agent1, agent2, last_frame_time_ms)
+        SimulationState() = new()
     end
 
 

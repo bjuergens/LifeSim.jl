@@ -11,9 +11,6 @@ module MyMain
     using .MyGui
     using .MySimulation
 
-    lk_sim = ReentrantLock()
-    lk_ctrl = ReentrantLock()
-
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
         lock(lk_ctrl)
         try
@@ -50,7 +47,7 @@ module MyMain
 
         @info "running gui with some dummy-data for debugging..."
 
-        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0, 5)
+        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
         sim_state_from_sim = SimulationState(
             1, 
             Agent(0.3, 0.3, 0.9, 0.1),
@@ -69,7 +66,7 @@ module MyMain
 
         workThread = Threads.@spawn simulationLoop!($ref_sim_state_to_simulation, $ctrlState)
 
-        @info Threads.nthreads() Threads.threadid()
+        @info "Threads " Threads.nthreads() Threads.threadid()
 
         !isinteractive() && wait(t_render)
         ctrlState.is_stop = true
@@ -77,6 +74,9 @@ module MyMain
         ctrlState.is_stop = true
         wait(workThread)
 
+
+        @info "num simulation steps " ref_sim_state_to_simulation[].num_age
+        @info "final sim state " ref_sim_state_to_simulation[]
     end
 end
 
