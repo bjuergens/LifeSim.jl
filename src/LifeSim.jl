@@ -5,39 +5,14 @@ module MyMain
 
     include("models.jl")
     include("gui.jl")
+    include("simulation.jl")
 
     using .MyModels
     using .MyGui
-
+    using .MySimulation
 
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
-
-    function simWork!(simState::SimulationState, ctrlState::ControlState)
-        
-        last_time = Base.time_ns()
-        while !ctrlState.is_stop
-            simState.num_age += 1
-
-            if ( 0 == mod(floor(simState.num_age / 10), 2))
-                simState.agent1.pos_x += 0.01
-                simState.agent1.pos_y += 0.01
-            else
-                simState.agent1.pos_x -= 0.01
-                simState.agent1.pos_y -= 0.01
-            end
-            new_time = Base.time_ns()
-            elapsed_time = new_time-last_time
-            simState.last_frame_time_ms = elapsed_time/1000
-            time_to_wait_s = (ctrlState.min_frametime_ms - simState.last_frame_time_ms) / 1000
-            if time_to_wait_s>0
-                sleep(time_to_wait_s)
-                new_time = Base.time_ns()
-            end
-            last_time = new_time
-        end
-    end
-
 
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
         lock(lk_ctrl)
@@ -91,9 +66,9 @@ module MyMain
 
         t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
 
-        workThread = Threads.@spawn simWork!($sim_state_from_sim, $ctrlState)
+        workThread = Threads.@spawn simulationLoop!($sim_state_from_sim, $ctrlState)
 
-        @show Threads.nthreads() Threads.threadid()
+        @info Threads.nthreads() Threads.threadid()
 
         !isinteractive() && wait(t_render)
         ctrlState.is_stop = true
