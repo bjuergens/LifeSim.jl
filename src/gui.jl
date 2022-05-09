@@ -5,7 +5,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module MyGui
-    export aaa
     export start_render_loop!
     using CImGui
 
@@ -128,38 +127,32 @@ module MyGui
     end
 
     function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState})
-        println("starting render loop...")
+        @info "starting render loop..."
         return Renderer.render(()->ui(ctrlState, simState), width = 800, height = 600, title = "A simple UI")
     end
-
-    function aaa()
-
-        println("running gui with some dummy-data for debugging...")
-        function infinite_loop(state::ControlState)
-            state.is_stop = false
-            @async while true
-                state.is_stop && break
-                push!(state.arr, popat!(state.arr, 1) * state.afloat)
-                yield()
-            end
-        end
-        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0)
-        simState = Ref(SimulationState(
-            1,
-            Agent(0.3, 0.3, 0.9, 0.1),
-            Agent(0.6, 0.6, 0.9, 0.1), 
-            0.0
-        ))
-        t_render = start_render_loop!(ctrlState, simState)
-        println("starting dummy update loop...")
-        t_update = infinite_loop(ctrlState)
-        !isinteractive() && wait(t_render)
-        #!isinteractive() && wait(t_update)
-    end 
 
 end
     
 if abspath(PROGRAM_FILE) == @__FILE__
     using .MyGui
-    aaa()
+    using .MyModels
+    using .MyModelExamples
+    
+    @info "running gui with some dummy-data for debugging..."
+    function infinite_loop(state::ControlState)
+        state.is_stop = false
+        @async while true
+            state.is_stop && break
+            push!(state.arr, popat!(state.arr, 1) * state.afloat)
+            yield()
+        end
+    end
+
+
+    t_render = start_render_loop!(ctrlState, Ref(simState))
+    @info "starting dummy update loop..."
+    t_update = infinite_loop(ctrlState)
+    !isinteractive() && wait(t_render)
+    #!isinteractive() && wait(t_update)
+    @info "starting dummy update loop...done"
 end

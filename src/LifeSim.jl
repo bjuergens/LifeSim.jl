@@ -73,9 +73,9 @@ module MyMain
 
         # todo: safe copy controlstate to worker in the same safe way as the other way
 
-        println("running gui with some dummy-data for debugging...")
+        @info "running gui with some dummy-data for debugging..."
 
-        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0)
+        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 10.0, 5)
         sim_state_from_sim = SimulationState(
             1, 
             Agent(0.3, 0.3, 0.9, 0.1),
@@ -84,9 +84,9 @@ module MyMain
         )
         ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
 
-        println("starting render loop...")    
+        @info "starting render loop..."
         t_render = start_render_loop!(ctrlState, ref_sim_state_to_gui)
-        println("starting dummy update loop...")
+        @info "starting dummy update loop..."
 
 
         t_update = infinite_loop(ctrlState, ref_sim_state_to_gui, sim_state_from_sim)
