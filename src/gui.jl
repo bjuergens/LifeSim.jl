@@ -95,15 +95,19 @@ module MyGui
                 ImVec2(canvas_pos.x + 0.7*canvas_size.x, canvas_pos.y + 0.7* canvas_size.y), 
                 IM_COL32(255, 0, 255, 255)
             )
-            drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent1)
-            drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent2)
+            
+            for agent in simState[].last_step[].agent_list
+                drawAgent2!(draw_list, canvas_pos, canvas_size, agent)
+            end
+            #drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent1)
+            #drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent2)
             # add invis control behind canvas so following controls get placed correctly
             CImGui.InvisibleButton("canvas", canvas_size) 
             
             
             CImGui.Separator()
 
-            CImGui.Text(string("Frametime: ", simState[].last_frame_time_ms, "ms"))
+            CImGui.Text(string("Frametime: ", simState[].last_step[].last_frame_time_ms, "ms"))
             
             min_frametime_ms = Ref(controlState.min_frametime_ms)
             CImGui.SliderFloat("min_frame_time", min_frametime_ms, 0.0, 100.0, "time = %.3f ms")

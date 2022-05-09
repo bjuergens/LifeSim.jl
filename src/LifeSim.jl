@@ -10,6 +10,7 @@ module MyMain
     using .MyModels
     using .MyGui
     using .MySimulation
+    using .MyModelExamples
 
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
         lock(lk_ctrl)
@@ -47,13 +48,7 @@ module MyMain
 
         @info "running gui with some dummy-data for debugging..."
 
-        ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
-        sim_state_from_sim = SimulationState(
-            1, 
-            Agent(0.3, 0.3, 0.9, 0.1),
-            Agent(0.6, 0.6, 0.9, 0.1),
-            0.0
-        )
+        sim_state_from_sim = simState
         ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
         ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 
@@ -75,7 +70,7 @@ module MyMain
         wait(workThread)
 
 
-        @info "num simulation steps " ref_sim_state_to_simulation[].num_age
+        @info "num simulation steps " ref_sim_state_to_simulation[].last_step[].num_step
         @info "final sim state " ref_sim_state_to_simulation[]
     end
 end
