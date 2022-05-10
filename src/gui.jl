@@ -31,6 +31,7 @@ module MyGui
     end
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
+        # todo: draw direction as line/triangle/slim_rect
 
         CImGui.AddCircleFilled(draw_list, 
             ImVec2(
@@ -40,6 +41,8 @@ module MyGui
             canvas_size.x * aAgent.size, 
             aAgent.color, 
             12)
+
+        
     end
 
     using CImGui: ImVec2, ImVec4, IM_COL32, ImU32

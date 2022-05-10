@@ -15,18 +15,14 @@ module MySimulation
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
 
-    
 
     COL_INERT = IM_COL32(40,50,40,255)
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
 
     function wrap(value, min, max)
-        value =  value > max ? value - (max - min) : value
-
-        if value < min
-            value += (max - min)
-        end
+        value = value>max ? value-(max-min) : value
+        value = value<min ? value+(max-min) : value
         return value
     end
 
