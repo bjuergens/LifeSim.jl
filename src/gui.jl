@@ -12,31 +12,7 @@ module MyGui
     @show render_source
     include(render_source)
     using .Renderer
-
-
     using ..MyModels
-
-
-    function drawAgent!(draw_list, aAgent::Agent)
-        canvas_pos = ImVec2(aCanvas.pos_x, aCanvas.pos_y)
-        @show aCanvas
-        CImGui.AddRectFilled(draw_list, 
-        ImVec2(canvas_pos.x + 0.3*aCanvas.size_x, canvas_pos.y + 0.3* aCanvas.size_y), 
-        ImVec2(canvas_pos.x + 0.4*aCanvas.size_x, canvas_pos.y + 0.4* aCanvas.size_y), 
-        IM_COL32(0, 255, 255, 255)
-    )
-        draw_pos_x = aCanvas.pos_x+ aAgent.pos_x * aCanvas.size_x
-        draw_pos_y = aCanvas.pos_y+ aAgent.pos_y * aCanvas.size_y
-        CImGui.AddRectFilled(draw_list, 
-            ImVec2(draw_pos_x-aAgent.size, draw_pos_y-aAgent.size), 
-            ImVec2(draw_pos_x+aAgent.size, draw_pos_y+aAgent.size), 
-            IM_COL32(0, 0, 255, 255)
-        )
-        @show draw_pos_x
-        @show draw_pos_y
-    end
-
-
 
     function drawAgent2!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
 
@@ -59,16 +35,9 @@ module MyGui
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
     function ui(controlState::ControlState, simState::Ref{SimulationState})
-        # CImGui.SetNextWindowSize((300, 200), CImGui.ImGuiCond_FirstUseEver)
         CImGui.SetNextWindowSize((300, 200), CImGui.ImGuiCond_Once)
         CImGui.Begin("CanvasWindow")
             draw_list = CImGui.GetWindowDrawList()
-
-            col32 = CImGui.ColorConvertFloat4ToU32(ImVec4(col...))
-            x= 10
-            y= 15
-            # CImGui.AddRectFilled(draw_list, ImVec2(x, y), ImVec2(x+10, y+10), col32);     
-
             CImGui.Text("Canvas: ")
             CImGui.Separator()
             
@@ -99,14 +68,9 @@ module MyGui
             for agent in simState[].last_step[].agent_list
                 drawAgent2!(draw_list, canvas_pos, canvas_size, agent)
             end
-            #drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent1)
-            #drawAgent2!(draw_list, canvas_pos, canvas_size, simState[].agent2)
-            # add invis control behind canvas so following controls get placed correctly
             CImGui.InvisibleButton("canvas", canvas_size) 
             
-            
             CImGui.Separator()
-
             CImGui.Text(string("Frametime: ", simState[].last_step[].last_frame_time_ms, "ms"))
             
             min_frametime_ms = Ref(controlState.min_frametime_ms)

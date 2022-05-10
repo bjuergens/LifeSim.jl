@@ -11,8 +11,12 @@ module MySimulation
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
 
-    function get_step_agents(simStep::SimulationStep, ctrlState::ControlState)
+    function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_result = []
+
+        # todo: collision with walls
+        # --> dann bewegung mit direction_angle
+        # todo: collision mit mobs
 
         for agent in simStep.agent_list
             if ( 0 == mod(floor(simStep.num_step / 10), 2))
@@ -35,7 +39,7 @@ module MySimulation
         last_time_ns = Base.time_ns()
         while !ctrlState.is_stop
             
-            agentList = get_step_agents(simState, ctrlState)
+            agentList = update_agents(simState, ctrlState)
 
             last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
             time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
