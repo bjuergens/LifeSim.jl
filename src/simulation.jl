@@ -10,6 +10,7 @@ module MySimulation
 
     using CImGui: IM_COL32
     using Distances: Euclidean
+    using Combinatorics: combinations
 
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
@@ -24,7 +25,7 @@ module MySimulation
         value =  value > max ? value - (max - min) : value
 
         if value < min
-            value += max
+            value += (max - min)
         end
         return value
     end
@@ -45,10 +46,6 @@ module MySimulation
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_individually = []
 
-        # todo: collision with walls
-        # --> dann bewegung mit direction_angle
-        # todo: collision mit mobs
-
         for agent in simStep.agent_list
             agent_pos_x = agent.pos_x + sin(agent.direction_angle) * agent.speed
             agent_pos_y = agent.pos_y + cos(agent.direction_angle) *agent.speed
@@ -56,31 +53,37 @@ module MySimulation
             agent_pos_x, inside_x = limit(agent_pos_x, agent.size, 1.0 - agent.size)
             agent_pos_y, inside_y = limit(agent_pos_y, agent.size, 1.0 - agent.size)
             
-            a_direction_angle = agent.direction_angle + 0.05
+            if agent.id == 2
+                a_direction_angle = agent.direction_angle + 0.05
+            else
+                a_direction_angle = agent.direction_angle - 0.05
+            end 
             a_direction_angle = wrap(a_direction_angle, -pi, pi)
 
-            if inside_x && inside_y
                 color = COL_INERT
-            else
-                color = COL_ACTIV
-            end
             
 
-            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, color))
+            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, color, agent.id))
         end
 
-        agent_list_final = []
-        for (agent1, agent2) in Iterators.product(agent_list_individually,agent_list_individually)
+        for (agent1, agent2) in combinations(agent_list_individually, 2)
 
-            if agent1==agent2
-                continue
-            end
             dist = Euclidean()((agent1.pos_x,agent1.pos_y), (agent2.pos_x,agent2.pos_y))
             
             if dist < agent1.size + agent2.size
-                agent1.color = COL_COLLISION
-                # todo: give id to agents, and only do detection in one direction
-                # todo: move agent appart from each other, while the heavier one is moved less.
+                move_dist =  agent1.size + agent2.size - dist
+                d_x = agent1.pos_x - agent2.pos_x
+                d_y = agent1.pos_y - agent2.pos_y
+                d_length = sqrt(d_x*d_x+d_y*d_y)
+                norm_direction = (d_x/d_length,d_y/d_length) 
+
+                move_vec = (move_dist*norm_direction[1],move_dist*norm_direction[2])
+                ratio = (agent1.size^2) / (agent2.size^2)
+
+                agent1.pos_x += move_vec[1] / ratio
+                agent1.pos_y += move_vec[2] / ratio
+                agent2.pos_x -= move_vec[1] * ratio
+                agent2.pos_y -= move_vec[2] * ratio
             end
         end
 
