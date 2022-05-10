@@ -8,28 +8,83 @@ module MySimulation
 
     using ..MyModels
 
+    using CImGui: IM_COL32
+    using Distances: Euclidean
+
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
 
+    
+
+    COL_INERT = IM_COL32(40,50,40,255)
+    COL_ACTIV = IM_COL32(255,50,40,255)
+    COL_COLLISION = IM_COL32(255,255,40,255)
+
+    function wrap(value, min, max)
+        value =  value > max ? value - (max - min) : value
+
+        if value < min
+            value += max
+        end
+        return value
+    end
+
+    function limit(value, min, max)
+        
+        if value > max 
+            return  max, false
+        end
+
+        if value < min
+            return min, false
+        end
+        return value, true
+    end
+    
+
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
-        agent_list_result = []
+        agent_list_individually = []
 
         # todo: collision with walls
         # --> dann bewegung mit direction_angle
         # todo: collision mit mobs
 
         for agent in simStep.agent_list
-            if ( 0 == mod(floor(simStep.num_step / 10), 2))
-                agent_pos_x = agent.pos_x + 0.01
-                agent_pos_y = agent.pos_y + 0.01
+            agent_pos_x = agent.pos_x + sin(agent.direction_angle) * agent.speed
+            agent_pos_y = agent.pos_y + cos(agent.direction_angle) *agent.speed
+
+            agent_pos_x, inside_x = limit(agent_pos_x, agent.size, 1.0 - agent.size)
+            agent_pos_y, inside_y = limit(agent_pos_y, agent.size, 1.0 - agent.size)
+            
+            a_direction_angle = agent.direction_angle + 0.05
+            a_direction_angle = wrap(a_direction_angle, -pi, pi)
+
+            if inside_x && inside_y
+                color = COL_INERT
             else
-                agent_pos_x = agent.pos_x - 0.01
-                agent_pos_y = agent.pos_y - 0.01
+                color = COL_ACTIV
             end
-            push!(agent_list_result, Agent(agent_pos_x, agent_pos_y, agent.direction_angle, agent.size))
+            
+
+            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, color))
         end
 
-        return agent_list_result
+        agent_list_final = []
+        for (agent1, agent2) in Iterators.product(agent_list_individually,agent_list_individually)
+
+            if agent1==agent2
+                continue
+            end
+            dist = Euclidean()((agent1.pos_x,agent1.pos_y), (agent2.pos_x,agent2.pos_y))
+            
+            if dist < agent1.size + agent2.size
+                agent1.color = COL_COLLISION
+                # todo: give id to agents, and only do detection in one direction
+                # todo: move agent appart from each other, while the heavier one is moved less.
+            end
+        end
+
+        return agent_list_individually
     end
 
     function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::ControlState)
@@ -62,22 +117,40 @@ module MySimulation
     end
 end
 
-
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    using .MyModelExamples
-    using .MySimulation
-    
-    function stop_after(time_s)
-        @info "stop_after..."
-        sleep(time_s)
-        ctrlState.is_stop = true
-        @info "stop_after... done" 
-    end
+function test_console()
     ctrlThread = Threads.@spawn stop_after(1.0)
     simulationLoop!(Ref(simState), ctrlState)
     @info simState.last_step[].num_step
     wait(ctrlThread)
     @info simState.last_step[].num_step
     @info simState
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    cli_test = false
+    function stop_after(time_s)
+        @info "stop_after..."
+        sleep(time_s)
+        ctrlState.is_stop = true
+        @info "stop_after... done" 
+    end
+    using .MyModelExamples
+    using .MySimulation
+    if cli_test
+        test_console()
+    else
+        include("gui.jl")
+        using .MyGui
+        using .MyModels
+        sim_ref = Ref(simState)
+        t_render = start_render_loop!(ctrlState, sim_ref)
+        @info "starting simloop loop..."
+        workThread = Threads.@spawn simulationLoop!($sim_ref, $ctrlState)
+        !isinteractive() && wait(t_render)
+        @info "gui done"
+        ctrlState.is_stop = true
+        wait(workThread)
+        @info "done... done"
+    end
+
 end

@@ -14,7 +14,8 @@ module MyGui
     using .Renderer
     using ..MyModels
 
-    function drawAgent2!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
+    
+    function drawAgentRect!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
 
         CImGui.AddRectFilled(draw_list, 
             ImVec2(
@@ -25,7 +26,20 @@ module MyGui
                 canvas_pos.x + ((aAgent.pos_x + aAgent.size ) * canvas_size.x) , 
                 canvas_pos.y + ((aAgent.pos_y + aAgent.size ) * canvas_size.y)+ aAgent.size
             ), 
-            IM_COL32(0, 255, 255, 255))
+            IM_COL32(0, 255, 255, 255)
+            )
+    end
+
+    function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
+
+        CImGui.AddCircleFilled(draw_list, 
+            ImVec2(
+                canvas_pos.x + ((aAgent.pos_x) * canvas_size.x) , 
+                canvas_pos.y + ((aAgent.pos_y) * canvas_size.y)
+            ), 
+            canvas_size.x * aAgent.size, 
+            aAgent.color, 
+            12)
     end
 
     using CImGui: ImVec2, ImVec4, IM_COL32, ImU32
@@ -35,7 +49,7 @@ module MyGui
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
     function ui(controlState::ControlState, simState::Ref{SimulationState})
-        CImGui.SetNextWindowSize((300, 200), CImGui.ImGuiCond_Once)
+        CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
         CImGui.Begin("CanvasWindow")
             draw_list = CImGui.GetWindowDrawList()
             CImGui.Text("Canvas: ")
@@ -66,7 +80,8 @@ module MyGui
             )
             
             for agent in simState[].last_step[].agent_list
-                drawAgent2!(draw_list, canvas_pos, canvas_size, agent)
+                # drawAgentRect!(draw_list, canvas_pos, canvas_size, agent)
+                drawAgentCirc!(draw_list, canvas_pos, canvas_size, agent)
             end
             CImGui.InvisibleButton("canvas", canvas_size) 
             
@@ -115,7 +130,6 @@ if abspath(PROGRAM_FILE) == @__FILE__
             yield()
         end
     end
-
 
     t_render = start_render_loop!(ctrlState, Ref(simState))
     @info "starting dummy update loop..."
