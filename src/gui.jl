@@ -31,7 +31,8 @@ module MyGui
     end
 
     """get ratio of value between min and max"""
-    function scale_to_norm(value, min, max )
+    function value_to_ratio(value, min, max )
+        # todo: move this to helper
         if value< min
             return min
         end
@@ -43,18 +44,30 @@ module MyGui
         return x/width
     end
 
-    function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
+    function ratio_to_value(value, min, width )
+        # todo: implement this for 2d vec
+        if value< 0.0
+            return min
+        end
+        if value > 1.0
+            return max
+        end
+        return min + (value * width)
+        
+    end
 
+    function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
+        
         CImGui.AddCircleFilled(draw_list, 
             ImVec2(
-                canvas_pos.x + ((aAgent.pos_x) * canvas_size.x) , 
-                canvas_pos.y + ((aAgent.pos_y) * canvas_size.y)
+                ratio_to_value(aAgent.pos_x, canvas_pos.x, canvas_size.x) , 
+                ratio_to_value(aAgent.pos_y, canvas_pos.y, canvas_size.y)
             ), 
             canvas_size.x * aAgent.size, 
             aAgent.color, 
             12)
         
-        # AddTriangleFilled(handle::Ptr{ImDrawList}, a, b, c, col) = ImDrawList_AddTriangleFilled(handle, a, b, c, col)
+        # todo: use vec2 here
         agent_move_x = aAgent.pos_x + sin(aAgent.direction_angle) * aAgent.size
         agent_move_y = aAgent.pos_y + cos(aAgent.direction_angle) * aAgent.size
         agent_move_ort_x = sin(pi/2+aAgent.direction_angle) * (aAgent.size/3)
@@ -76,7 +89,7 @@ module MyGui
                 canvas_pos.x + ((agent_move_ort2_x) * canvas_size.x) , 
                 canvas_pos.y + ((agent_move_ort2_y) * canvas_size.y) 
             ), 
-            IM_COL32(0, floor(255 * scale_to_norm(aAgent.speed,0, 0.05)), 0, 255)
+            IM_COL32(0, floor(255 * value_to_ratio(aAgent.speed,0, 0.05)), 0, 255)
         )
 
         CImGui.AddCircleFilled(draw_list, 
