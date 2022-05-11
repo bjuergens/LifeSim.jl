@@ -40,8 +40,8 @@ module MyModelExamples
 
     export ctrlState, simState, aAgent, bAgent, stepStep
 
-    aAgent  = Agent(0.3, 0.3, 0.9, 0.01, 0.11, 0xff3c3232,1)
-    bAgent  = Agent(0.6, 0.6, 0.9, 0.02, 0.13, 0xff3c3232, 2)
+    aAgent  = Agent(0.3, 0.3, pi/2, 0.01, 0.11, 0xff3c3232,1)
+    bAgent  = Agent(0.6, 0.6, 2pi, 0.02, 0.13, 0xff3c3232, 2)
 
     ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
     stepStep = SimulationStep(1, [aAgent, bAgent], 0.1)

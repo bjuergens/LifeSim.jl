@@ -30,8 +30,20 @@ module MyGui
             )
     end
 
+    """get ratio of value between min and max"""
+    function scale_to_norm(value, min, max )
+        if value< min
+            return min
+        end
+        if value > max
+            return max
+        end
+        width = max - min
+        x = value - min
+        return x/width
+    end
+
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
-        # todo: draw direction as line/triangle/slim_rect
 
         CImGui.AddCircleFilled(draw_list, 
             ImVec2(
@@ -40,6 +52,40 @@ module MyGui
             ), 
             canvas_size.x * aAgent.size, 
             aAgent.color, 
+            12)
+        
+        # AddTriangleFilled(handle::Ptr{ImDrawList}, a, b, c, col) = ImDrawList_AddTriangleFilled(handle, a, b, c, col)
+        agent_move_x = aAgent.pos_x + sin(aAgent.direction_angle) * aAgent.size
+        agent_move_y = aAgent.pos_y + cos(aAgent.direction_angle) * aAgent.size
+        agent_move_ort_x = sin(pi/2+aAgent.direction_angle) * (aAgent.size/3)
+        agent_move_ort_y = cos(pi/2+aAgent.direction_angle) * (aAgent.size/3)
+        agent_move_ort1_x = aAgent.pos_x + agent_move_ort_x
+        agent_move_ort1_y = aAgent.pos_y + agent_move_ort_y
+        agent_move_ort2_x = aAgent.pos_x - agent_move_ort_x
+        agent_move_ort2_y = aAgent.pos_y - agent_move_ort_y
+        CImGui.AddTriangleFilled(draw_list,
+            ImVec2(
+                canvas_pos.x + ((agent_move_x) * canvas_size.x) , 
+                canvas_pos.y + ((agent_move_y) * canvas_size.y)
+            ),
+            ImVec2(
+                canvas_pos.x + ((agent_move_ort1_x) * canvas_size.x) , 
+                canvas_pos.y + ((agent_move_ort1_y) * canvas_size.y)
+            ),
+            ImVec2(
+                canvas_pos.x + ((agent_move_ort2_x) * canvas_size.x) , 
+                canvas_pos.y + ((agent_move_ort2_y) * canvas_size.y) 
+            ), 
+            IM_COL32(0, floor(255 * scale_to_norm(aAgent.speed,0, 0.05)), 0, 255)
+        )
+
+        CImGui.AddCircleFilled(draw_list, 
+            ImVec2(
+                canvas_pos.x + ((agent_move_x) * canvas_size.x) , 
+                canvas_pos.y + ((agent_move_y) * canvas_size.y)
+            ), 
+            canvas_size.x * aAgent.size / 10, 
+            IM_COL32(255, 0,0 , 255), 
             12)
 
         
