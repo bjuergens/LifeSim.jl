@@ -56,15 +56,19 @@ module MySimulation
             end 
             a_direction_angle = wrap(a_direction_angle, -pi, pi)
 
-                color = COL_INERT
             
 
-            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, color, agent.id))
+            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
 
             dist = Euclidean()((agent1.pos_x,agent1.pos_y), (agent2.pos_x,agent2.pos_y))
+
+            if dist < 0.00001
+                @warn "dist ist very low" dist
+                continue
+            end
             
             if dist < agent1.size + agent2.size
                 move_dist =  agent1.size + agent2.size - dist
@@ -82,6 +86,15 @@ module MySimulation
                 agent2.pos_y -= move_vec[2] * ratio
             end
         end
+
+        if 0 == mod(simStep.num_step, 100)
+            @info "doing evolution-step"
+
+            # todo: kill some agents
+            # todo: make some cross-overs
+            # todo: make some mutation
+        end
+
 
         return agent_list_individually
     end
