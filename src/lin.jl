@@ -3,6 +3,9 @@
 module LSLin
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
+    export angle_to_axis
+
+    # using Math
 
     Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
 
@@ -49,6 +52,10 @@ module LSLin
         return x/width
     end
 
+    function angle_to_axis(p::Vec2)
+        return atan(p.x,p.y)
+    end
+
 
 end #module 
 
@@ -73,6 +80,11 @@ function doTest()
     @test ratio_to_intverall(0.3,0,10)≈3 
     
     @test interval_to_ratio(3, 0, 10)≈0.3
+
+    xAxis::Vec2 = (x=0., y=1.)
+    yAxis::Vec2 = (x=1., y=0.)
+    @test angle_to_axis(xAxis)  ≈ 0
+    @test angle_to_axis(yAxis)  ≈ pi/2
 end
 end
 end #module LinTests
