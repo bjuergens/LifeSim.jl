@@ -19,8 +19,8 @@ module LSGui
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
     function sim_to_pixel_point(sim_pos::Vec2, pixel_base::CImGui.LibCImGui.ImVec2, pixel_width::CImGui.LibCImGui.ImVec2)
-        return ImVec2(interval_to_ratio(sim_pos.x, pixel_base.x, pixel_width.x),
-                      interval_to_ratio(sim_pos.y, pixel_base.y, pixel_width.y))
+        return ImVec2(ratio_to_intverall(sim_pos.x, pixel_base.x, pixel_width.x),
+        ratio_to_intverall(sim_pos.y, pixel_base.y, pixel_width.y))
     end
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
@@ -43,7 +43,7 @@ module LSGui
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size),
             sim_to_pixel_point(agent_move_ort1,canvas_pos, canvas_size),
             sim_to_pixel_point(agent_move_ort2,canvas_pos, canvas_size),
-            IM_COL32(0, floor(255 * ratio_to_intverall(aAgent.speed,0, 0.05)), 0, 255)
+            IM_COL32(0, floor(255 * interval_to_ratio(aAgent.speed,0, 0.05)), 0, 255)
         )
 
         CImGui.AddCircleFilled(draw_list, 
@@ -62,9 +62,8 @@ module LSGui
     # the corresponding changes should be applied
     function ui(controlState::ControlState, simState::Ref{SimulationState})
         CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
-        CImGui.Begin("CanvasWindow")
+        CImGui.Begin("SimulationView")
             draw_list = CImGui.GetWindowDrawList()
-            CImGui.Text("Canvas: ")
             CImGui.Separator()
             
             canvas_pos = CImGui.GetCursorScreenPos()            # ImDrawList API uses screen coordinates!
@@ -116,7 +115,7 @@ module LSGui
 
     function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState})
         @info "starting render loop..."
-        window, ctx = init_renderer(800, 600, "blubb")
+        window, ctx = init_renderer(800, 600, "LifeSim.jl")
         GC.@preserve window ctx begin
                 t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), false)
         end

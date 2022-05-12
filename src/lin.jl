@@ -25,6 +25,17 @@ module LSLin
 
     "linear mapping from some interval to [0,1]. Enforces boundaries"
     function ratio_to_intverall(value, min, width )
+        if value< 0.0
+            return min
+        end
+        if value > 1.0
+            return min + width
+        end
+        return min + (value * width)
+    end
+
+    "linear mapping from [0,1] to some other interval. Enforces boundaries"
+    function interval_to_ratio(value, min, width )
         if value< min
             return min
         end
@@ -33,17 +44,6 @@ module LSLin
         end
         x = value - min
         return x/width
-    end
-
-    "linear mapping from [0,1] to some other interval. Enforces boundaries"
-    function interval_to_ratio(value::Cfloat, min::Cfloat, width::Cfloat )
-        if value< 0.0
-            return min
-        end
-        if value > 1.0
-            return width
-        end
-        return min + (value * width)
     end
 end #module 
 
@@ -65,9 +65,9 @@ function doTest()
     @test limit(0.3,-1,2)[1] ≈ 0.3
     @test limit(1.3,-1,2)[1] ≈ 1
     
-    @test ratio_to_intverall(0.3,0,10)≈3 broken=true
+    @test ratio_to_intverall(0.3,0,10)≈3 
     
-    @test interval_to_ratio(3, 0, 10)≈0.3 broken=true
+    @test interval_to_ratio(3, 0, 10)≈0.3
 end
 end
 end #module ModelTests
