@@ -5,16 +5,10 @@ module LSLin
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction
 
-    # using Math
-
-    # Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
-
     struct Vec2
         x::Cfloat
         y::Cfloat
-    end
-
-    
+    end    
     Base.isapprox(p1::Vec2, p2::Vec2; kw...) =  Base.isapprox(p1.x, p2.x;kw...) && Base.isapprox(p1.y, p2.y; kw...)
 
     "if value is outside interval, wrap once"
@@ -103,6 +97,9 @@ function doTest()
     @test Vec2(0.01,0.01) ≉ Vec2(0.,0.) atol=0.002
     @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
     @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
+
+    # move one point in the direction of another point by their distance, then the should end up on the same spot
+    @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
 end
 end
 end #module LinTests
