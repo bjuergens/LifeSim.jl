@@ -4,7 +4,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     include("models.jl") 
 end
 
-module MyGui
+module LSGui
     export start_render_loop!
     using CImGui
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
@@ -12,7 +12,7 @@ module MyGui
     include(render_source)
     using .Renderer:init_renderer
     using .Renderer:renderloop
-    using ..MyModels
+    using ..LSModels
 
     # move to new pacakge for linalg
     "linear mapping from some interval to [0,1]. Enforces boundaries"
@@ -154,8 +154,8 @@ using SafeTestsets
 export doTest
 function doTest()
 @safetestset "Examples" begin
-    using ...MyGui
-    using ...MyModelExamples
+    using ...LSGui
+    using ...LSModelExamples
     using GLFW
     
     function render_win_for_half_second()
@@ -172,9 +172,9 @@ end #module GuiTests
 
     
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .MyGui
-    using .MyModels
-    using .MyModelExamples
+    using .LSGui
+    using .LSModels
+    using .LSModelExamples
     using .GuiTests
     doTest()
     

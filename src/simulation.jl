@@ -3,10 +3,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
     include("models.jl") 
 end
 
-module MySimulation
+module LSSimulation
     export simulationLoop!, lk_sim, lk_ctrl
 
-    using ..MyModels
+    using ..LSModels
 
     using CImGui: IM_COL32
     using Distances: Euclidean
@@ -145,14 +145,14 @@ if abspath(PROGRAM_FILE) == @__FILE__
         ctrlState.is_stop = true
         @info "stop_after... done" 
     end
-    using .MyModelExamples
-    using .MySimulation
+    using .LSModelExamples
+    using .LSSimulation
     if cli_test
         test_console()
     else
         include("gui.jl")
-        using .MyGui
-        using .MyModels
+        using .LSGui
+        using .LSModels
         list = simState.last_step[].agent_list
 
         cAgent = Agent((x=0.2, y=0.3), pi/2, 0.01, 0.05, list[1].color ,3)

@@ -7,10 +7,10 @@ module MyMain
     include("gui.jl")
     include("simulation.jl")
 
-    using .MyModels
-    using .MyGui
-    using .MySimulation
-    using .MyModelExamples
+    using .LSModels
+    using .LSGui
+    using .LSSimulation
+    using .LSModelExamples
 
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_sim::ControlState)
         lock(lk_ctrl)

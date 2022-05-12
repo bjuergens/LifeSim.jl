@@ -1,5 +1,5 @@
 
-module MyModels
+module LSModels
 export Agent, makeAgent
 export SimulationState, ControlState, SimulationStep, Vec2
 
@@ -34,13 +34,13 @@ mutable struct ControlState
     min_frametime_ms::Cfloat
     request_simulation_state_at_age::Int
 end
-end #module MyModels
+end #module LSModels
 
 
 """viable example for all models used by testclasses for most other modules in this repo"""
-module MyModelExamples
+module LSModelExamples
 export ctrlState, simState, aAgent, bAgent, stepStep
-using ..MyModels
+using ..LSModels
 using CImGui: IM_COL32
 aAgent = Agent((x=0.3, y=0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
 bAgent = Agent((x=0.6, y=0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)   
@@ -57,7 +57,7 @@ using SafeTestsets
 export doTest
 function doTest()
 @safetestset "Examples" begin
-    using ...MyModels
+    using ...LSModels
     using ...MyModelExamples
     
     @test 0<aAgent.pos.x<1
