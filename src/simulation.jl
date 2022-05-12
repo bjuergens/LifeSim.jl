@@ -1,7 +1,7 @@
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("models.jl") 
     include("lin.jl") 
+    include("models.jl") 
 end
 
 module LSSimulation
@@ -91,6 +91,8 @@ module LSSimulation
             last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
             time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
             if time_to_wait_s > 0
+                # sleep is efficient but inacurate 
+                # https://discourse.julialang.org/t/accuracy-of-sleep/5546
                 sleep(time_to_wait_s)
             end
 

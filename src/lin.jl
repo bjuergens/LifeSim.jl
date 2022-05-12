@@ -1,7 +1,10 @@
 
 
 module LSLin
+    export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
+
+    Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
 
     "if value is outside interval, wrap once"
     function wrap(value, min, width)
@@ -45,10 +48,12 @@ module LSLin
         x = value - min
         return x/width
     end
+
+
 end #module 
 
 
-module ModelTests
+module LinTests
 using SafeTestsets
 export doTest
 function doTest()
@@ -70,9 +75,9 @@ function doTest()
     @test interval_to_ratio(3, 0, 10)≈0.3
 end
 end
-end #module ModelTests
+end #module LinTests
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .ModelTests
+    using .LinTests
     doTest()
 end

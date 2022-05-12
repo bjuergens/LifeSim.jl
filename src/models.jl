@@ -1,12 +1,17 @@
 
+if abspath(PROGRAM_FILE) == @__FILE__
+    include("lin.jl") 
+end
+
 module LSModels
-export Agent, makeAgent
+export Agent, SensorData
 export SimulationState, ControlState, SimulationStep, Vec2
 
 using CImGui: IM_COL32
+using ..LSLin
 
 "position in simulation-space"
-Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
+
 
 mutable struct Agent
     pos::Vec2
@@ -58,8 +63,9 @@ export doTest
 function doTest()
 @safetestset "Examples" begin
     using ...LSModels
-    using ...MyModelExamples
-    
+    using ...LSModelExamples
+    @info "ModelExamples" aAgent bAgent ctrlState simState stepStep
+
     @test 0<aAgent.pos.x<1
     @test 1+1==2  # canary
 end
@@ -67,9 +73,6 @@ end
 end #module ModelTests
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .MyModelExamples
-    @info "ModelExamples" aAgent bAgent ctrlState simState stepStep
-
     using .ModelTests
     doTest()
 end
