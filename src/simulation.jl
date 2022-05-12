@@ -20,6 +20,7 @@ module MySimulation
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
 
+    # move to new pacakge for linalg
     function wrap(value, min, max)
         value = value>max ? value-(max-min) : value
         value = value<min ? value+(max-min) : value

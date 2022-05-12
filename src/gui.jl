@@ -14,6 +14,7 @@ module MyGui
     using .Renderer
     using ..MyModels
 
+    # move to new pacakge for linalg
     "linear mapping from some interval to [0,1]. Enforces boundaries"
     function ratio_to_intverall(value, min, width )
         if value< min
