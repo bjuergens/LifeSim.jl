@@ -1,7 +1,7 @@
 
 
 module LSLin
-    export wrap, limit, ratio_to_intverall, interval_to_ratio
+    export wrap, clip, ratio_to_intverall, interval_to_ratio
 
     "if value is outside interval, wrap once"
     function wrap(value, min, width)
@@ -10,17 +10,17 @@ module LSLin
         return value
     end
 
-    "if value is outside interval, set to border, and report"
-    function limit(value, min, width)
+    "if value is outside interval, set to border"
+    function clip(value, min, width)
         
         if value > min+width
-            return  min+width, false
+            return  min+width
         end
 
         if value < min
-            return min, false
+            return min
         end
-        return value, true
+        return value
     end
 
     "linear mapping from some interval to [0,1]. Enforces boundaries"
@@ -61,9 +61,9 @@ function doTest()
     @test wrap(1, -pi, 2pi) ≈ 1
     @test wrap(-2pi, -pi, 2pi) ≈ 0
 
-    @test limit(-5,-1,2)[1] ≈ -1 
-    @test limit(0.3,-1,2)[1] ≈ 0.3
-    @test limit(1.3,-1,2)[1] ≈ 1
+    @test clip(-5,-1,2) ≈ -1 
+    @test clip(0.3,-1,2) ≈ 0.3
+    @test clip(1.3,-1,2) ≈ 1
     
     @test ratio_to_intverall(0.3,0,10)≈3 
     
