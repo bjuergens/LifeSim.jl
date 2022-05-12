@@ -140,9 +140,9 @@ module MyGui
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "blubb")
         GC.@preserve window ctx begin
-            t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), false)
+                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), false)
         end
-        return t
+        return t, window
     end
 end
 
@@ -157,15 +157,19 @@ function doTest()
 @safetestset "Examples" begin
     using ...MyGui
     using ...MyModelExamples
+    using GLFW
     
-    @test 0<aAgent.pos.x<1
+    function render_win_for_half_second()
+        _, window = start_render_loop!(ctrlState, Ref(simState))
+        sleep(0.5)
+        GLFW.SetWindowShouldClose(window, true)
+        return true
+    end
+    @test render_win_for_half_second()
     @test 1+1==2  # canary
 end
 end
 end #module GuiTests
-
-if abspath(PROGRAM_FILE) == @__FILE__
-end
 
     
 if abspath(PROGRAM_FILE) == @__FILE__
@@ -175,21 +179,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
     using .GuiTests
     doTest()
     
-    @info "running gui with some dummy-data for debugging..."
-    function infinite_loop(state::ControlState)
-        state.is_stop = false
-        @async while true
-            state.is_stop && break
-            push!(state.arr, popat!(state.arr, 1) * state.afloat)
-            yield()
-        end
+    keep_open = false
+    if keep_open
+        t_render, _ = start_render_loop!(ctrlState, Ref(simState))
+        t_update = infinite_loop(ctrlState)
+        !isinteractive() && wait(t_render)
     end
-
-    t_render = start_render_loop!(ctrlState, Ref(simState))
-    @info "starting dummy update loop..."
-    t_update = infinite_loop(ctrlState)
-    !isinteractive() && wait(t_render)
-    
-    #!isinteractive() && wait(t_update)
-    @info "starting dummy update loop...done"
 end
