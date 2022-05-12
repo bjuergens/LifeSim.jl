@@ -4,8 +4,10 @@ module MyMain
     export main
 
     include("models.jl")
+    include("lin.jl")
     include("gui.jl")
     include("simulation.jl")
+    
 
     using .LSModels
     using .LSGui
@@ -53,7 +55,7 @@ module MyMain
         ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 
         @info "starting render loop..."
-        t_render = start_render_loop!(ctrlState, ref_sim_state_to_gui)
+        t_render, _ = start_render_loop!(ctrlState, ref_sim_state_to_gui)
         @info "starting dummy update loop..."
 
 

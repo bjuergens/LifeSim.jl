@@ -2,6 +2,7 @@
 
 if abspath(PROGRAM_FILE) == @__FILE__
     include("models.jl") 
+    include("lin.jl")
 end
 
 module LSGui
@@ -13,30 +14,8 @@ module LSGui
     using .Renderer:init_renderer
     using .Renderer:renderloop
     using ..LSModels
+    using ..LSLin
 
-    # move to new pacakge for linalg
-    "linear mapping from some interval to [0,1]. Enforces boundaries"
-    function ratio_to_intverall(value, min, width )
-        if value< min
-            return min
-        end
-        if value > min+width
-            return min+width
-        end
-        x = value - min
-        return x/width
-    end
-
-    "linear mapping from [0,1] to some other interval. Enforces boundaries"
-    function interval_to_ratio(value::Cfloat, min::Cfloat, width::Cfloat )
-        if value< 0.0
-            return min
-        end
-        if value > 1.0
-            return width
-        end
-        return min + (value * width)
-    end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
     function sim_to_pixel_point(sim_pos::Vec2, pixel_base::CImGui.LibCImGui.ImVec2, pixel_width::CImGui.LibCImGui.ImVec2)

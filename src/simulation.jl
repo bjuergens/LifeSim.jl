@@ -1,12 +1,14 @@
 
 if abspath(PROGRAM_FILE) == @__FILE__
     include("models.jl") 
+    include("lin.jl") 
 end
 
 module LSSimulation
     export simulationLoop!, lk_sim, lk_ctrl
 
     using ..LSModels
+    using ..LSLin
 
     using CImGui: IM_COL32
     using Distances: Euclidean
@@ -15,30 +17,9 @@ module LSSimulation
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
 
-
     COL_INERT = IM_COL32(40,50,40,255)
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
-
-    # move to new pacakge for linalg
-    function wrap(value, min, max)
-        value = value>max ? value-(max-min) : value
-        value = value<min ? value+(max-min) : value
-        return value
-    end
-
-    function limit(value, min, max)
-        
-        if value > max 
-            return  max, false
-        end
-
-        if value < min
-            return min, false
-        end
-        return value, true
-    end
-    
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_individually = []
@@ -47,15 +28,15 @@ module LSSimulation
             agent_pos_x = agent.pos.x + sin(agent.direction_angle) * agent.speed
             agent_pos_y = agent.pos.y + cos(agent.direction_angle) *agent.speed
 
-            agent_pos_x, inside_x = limit(agent_pos_x, agent.size, 1.0 - agent.size)
-            agent_pos_y, inside_y = limit(agent_pos_y, agent.size, 1.0 - agent.size)
+            agent_pos_x, inside_x = limit(agent_pos_x, agent.size, 1.0 - 2agent.size)
+            agent_pos_y, inside_y = limit(agent_pos_y, agent.size, 1.0 - 2agent.size)
             
             if agent.id == 2
                 a_direction_angle = agent.direction_angle + 0.05
             else
                 a_direction_angle = agent.direction_angle - 0.05
             end 
-            a_direction_angle = wrap(a_direction_angle, -pi, pi)
+            a_direction_angle = wrap(a_direction_angle, -pi, 2pi)
 
             push!(agent_list_individually, Agent((x=agent_pos_x, y=agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
