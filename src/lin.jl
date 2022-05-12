@@ -23,7 +23,6 @@ module LSLin
         return value, true
     end
 
-    # move to new pacakge for linalg
     "linear mapping from some interval to [0,1]. Enforces boundaries"
     function ratio_to_intverall(value, min, width )
         if value< min
@@ -61,6 +60,14 @@ function doTest()
     @test wrap(-0.5,0,1) ≈ 0.5
     @test wrap(1, -pi, 2pi) ≈ 1
     @test wrap(-2pi, -pi, 2pi) ≈ 0
+
+    @test limit(-5,-1,2)[1] ≈ -1 
+    @test limit(0.3,-1,2)[1] ≈ 0.3
+    @test limit(1.3,-1,2)[1] ≈ 1
+    
+    @test ratio_to_intverall(0.3,0,10)≈3 broken=true
+    
+    @test interval_to_ratio(3, 0, 10)≈0.3 broken=true
 end
 end
 end #module ModelTests
