@@ -43,8 +43,8 @@ module MySimulation
         agent_list_individually = []
 
         for agent in simStep.agent_list
-            agent_pos_x = agent.pos_x + sin(agent.direction_angle) * agent.speed
-            agent_pos_y = agent.pos_y + cos(agent.direction_angle) *agent.speed
+            agent_pos_x = agent.pos.x + sin(agent.direction_angle) * agent.speed
+            agent_pos_y = agent.pos.y + cos(agent.direction_angle) *agent.speed
 
             agent_pos_x, inside_x = limit(agent_pos_x, agent.size, 1.0 - agent.size)
             agent_pos_y, inside_y = limit(agent_pos_y, agent.size, 1.0 - agent.size)
@@ -56,14 +56,12 @@ module MySimulation
             end 
             a_direction_angle = wrap(a_direction_angle, -pi, pi)
 
-            
-
-            push!(agent_list_individually, Agent(agent_pos_x, agent_pos_y, a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
+            push!(agent_list_individually, Agent((x=agent_pos_x, y=agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
 
-            dist = Euclidean()((agent1.pos_x,agent1.pos_y), (agent2.pos_x,agent2.pos_y))
+            dist = Euclidean()((agent1.pos.x,agent1.pos.y), (agent2.pos.x,agent2.pos.y))
 
             if dist < 0.00001
                 @warn "dist ist very low" dist

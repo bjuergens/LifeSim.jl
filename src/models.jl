@@ -1,25 +1,18 @@
 
 module MyModels
     export Agent, makeAgent
-    export SimulationState, ControlState, SimulationStep
+    export SimulationState, ControlState, SimulationStep, Vec2
 
     using CImGui: IM_COL32
-
+    Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
 
     mutable struct Agent
-        pos_x::Cfloat
-        pos_y::Cfloat
+        pos::Vec2
         direction_angle:: Cfloat
         speed::Cfloat
         size::Cfloat
         color::UInt32
         id::Int
-    end
-
-    function makeAgent(id, genome)
-        red = mod(id*10, 255 )
-        green = mod(-id*10, 255 )
-       return Agent(genome[1], genome[2], genome[3], genome[4], genome[5],  IM_COL32(red,green,0,255) , id)
     end
 
     struct SimulationStep
@@ -51,8 +44,8 @@ module MyModelExamples
     export ctrlState, simState, aAgent, bAgent, stepStep
 
     # aAgent = makeAgent(1,aGenome)
-    aAgent = Agent(0.3, 0.3, pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
-    bAgent = Agent(0.6, 0.6, 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)
+    aAgent = Agent((x=0.3, y=0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
+    bAgent = Agent((x=0.6, y=0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)
     
 
     ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)

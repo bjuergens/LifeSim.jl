@@ -60,22 +60,22 @@ module MyGui
         
         CImGui.AddCircleFilled(draw_list, 
             ImVec2(
-                ratio_to_value(aAgent.pos_x, canvas_pos.x, canvas_size.x) , 
-                ratio_to_value(aAgent.pos_y, canvas_pos.y, canvas_size.y)
+                ratio_to_value(aAgent.pos.x, canvas_pos.x, canvas_size.x) , 
+                ratio_to_value(aAgent.pos.y, canvas_pos.y, canvas_size.y)
             ), 
             canvas_size.x * aAgent.size, 
             aAgent.color, 
             12)
         
         # todo: use vec2 here
-        agent_move_x = aAgent.pos_x + sin(aAgent.direction_angle) * aAgent.size
-        agent_move_y = aAgent.pos_y + cos(aAgent.direction_angle) * aAgent.size
+        agent_move_x = aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size
+        agent_move_y = aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size
         agent_move_ort_x = sin(pi/2+aAgent.direction_angle) * (aAgent.size/3)
         agent_move_ort_y = cos(pi/2+aAgent.direction_angle) * (aAgent.size/3)
-        agent_move_ort1_x = aAgent.pos_x + agent_move_ort_x
-        agent_move_ort1_y = aAgent.pos_y + agent_move_ort_y
-        agent_move_ort2_x = aAgent.pos_x - agent_move_ort_x
-        agent_move_ort2_y = aAgent.pos_y - agent_move_ort_y
+        agent_move_ort1_x = aAgent.pos.x + agent_move_ort_x
+        agent_move_ort1_y = aAgent.pos.y + agent_move_ort_y
+        agent_move_ort2_x = aAgent.pos.x - agent_move_ort_x
+        agent_move_ort2_y = aAgent.pos.y - agent_move_ort_y
         CImGui.AddTriangleFilled(draw_list,
             ImVec2(
                 canvas_pos.x + ((agent_move_x) * canvas_size.x) , 
