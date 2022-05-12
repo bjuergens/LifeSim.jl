@@ -3,57 +3,70 @@
 module LSLin
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
-    export angle_to_axis
+    export angle_to_axis, move_in_direction
 
     # using Math
 
-    Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
+    # Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
+
+    struct Vec2
+        x::Cfloat
+        y::Cfloat
+    end
+
+    
+    Base.isapprox(p1::Vec2, p2::Vec2; kw...) =  Base.isapprox(p1.x, p2.x;kw...) && Base.isapprox(p1.y, p2.y; kw...)
 
     "if value is outside interval, wrap once"
-    function wrap(value, min, width)
-        value = value>min+width ? value-width : value
-        value = value<min ? value+width : value
+    function wrap(value, start, width)
+        value = value>start+width ? value-width : value
+        value = value<start ? value+width : value
         return value
     end
 
     "if value is outside interval, set to border"
-    function clip(value, min, width)
+    function clip(value, start, width)
         
-        if value > min+width
-            return  min+width
+        if value > start+width
+            return  start+width
         end
 
-        if value < min
-            return min
+        if value < start
+            return start
         end
         return value
     end
 
     "linear mapping from some interval to [0,1]. Enforces boundaries"
-    function ratio_to_intverall(value, min, width )
+    function ratio_to_intverall(value, start, width )
         if value< 0.0
-            return min
+            return start
         end
         if value > 1.0
-            return min + width
+            return start + width
         end
-        return min + (value * width)
+        return start + (value * width)
     end
 
     "linear mapping from [0,1] to some other interval. Enforces boundaries"
-    function interval_to_ratio(value, min, width )
-        if value< min
-            return min
+    function interval_to_ratio(value, start, width )
+        if value< start
+            return start
         end
-        if value > min+width
-            return min+width
+        if value > start+width
+            return start+width
         end
-        x = value - min
+        x = value - start
         return x/width
     end
 
     function angle_to_axis(p::Vec2)
         return atan(p.x,p.y)
+    end
+
+    function move_in_direction(p::Vec2, direction::Number, distance::Number)
+        return Vec2( p.x + sin(direction) * distance,
+                     p.y + cos(direction) * distance)
     end
 
 
@@ -81,10 +94,15 @@ function doTest()
     
     @test interval_to_ratio(3, 0, 10)≈0.3
 
-    xAxis::Vec2 = (x=0., y=1.)
-    yAxis::Vec2 = (x=1., y=0.)
+    xAxis = Vec2(0., 1.)
+    yAxis = Vec2(1., 0.)
     @test angle_to_axis(xAxis)  ≈ 0
     @test angle_to_axis(yAxis)  ≈ pi/2
+
+    @test Vec2(0.01,0.01) ≈ Vec2(0.,0.) atol=0.02
+    @test Vec2(0.01,0.01) ≉ Vec2(0.,0.) atol=0.002
+    @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
+    @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
 end
 end
 end #module LinTests

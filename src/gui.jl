@@ -1,8 +1,8 @@
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    include("models.jl") 
     include("lin.jl")
+    include("models.jl") 
 end
 
 module LSGui
@@ -31,14 +31,15 @@ module LSGui
             aAgent.color, 
             12)
         
-        agent_move = (x= aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size,
-                      y= aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size)
-        agent_move_ort = (x= sin(pi/2+aAgent.direction_angle) * (aAgent.size/3),
-                          y= cos(pi/2+aAgent.direction_angle) * (aAgent.size/3))
-        agent_move_ort1 = (x= convert(Cfloat, aAgent.pos.x + agent_move_ort.x),
-                           y= convert(Cfloat, aAgent.pos.y + agent_move_ort.y))
-        agent_move_ort2 = (x= convert(Cfloat, aAgent.pos.x - agent_move_ort.x),
-                           y= convert(Cfloat, aAgent.pos.y - agent_move_ort.y))
+        agent_move = Vec2( aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size,
+                           aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size)
+        agent_move_ort = Vec2( sin(pi/2+aAgent.direction_angle) * (aAgent.size/3),
+                               cos(pi/2+aAgent.direction_angle) * (aAgent.size/3))
+        agent_move_ort1 = Vec2( convert(Cfloat, aAgent.pos.x + agent_move_ort.x),
+                                convert(Cfloat, aAgent.pos.y + agent_move_ort.y))
+        agent_move_ort2 = Vec2(convert(Cfloat, aAgent.pos.x - agent_move_ort.x),
+                               convert(Cfloat, aAgent.pos.y - agent_move_ort.y))
+
         CImGui.AddTriangleFilled(draw_list,
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size),
             sim_to_pixel_point(agent_move_ort1,canvas_pos, canvas_size),

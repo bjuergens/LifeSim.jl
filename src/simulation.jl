@@ -38,7 +38,7 @@ module LSSimulation
             end 
             a_direction_angle = wrap(a_direction_angle, -pi, 2pi)
 
-            push!(agent_list_individually, Agent((x=agent_pos_x, y=agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
+            push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
@@ -60,10 +60,10 @@ module LSSimulation
                 move_vec = (x=move_dist*norm_direction[1],y=move_dist*norm_direction[2])
                 ratio = (agent1.size^2) / (agent2.size^2)
 
-                agent1.pos = (x=agent1.pos.x + (move_vec.x / ratio), 
-                              y=agent1.pos.y + (move_vec.y / ratio))
-                agent2.pos = (x=agent2.pos.x - (move_vec.x * ratio),
-                              y=agent2.pos.y - (move_vec.y * ratio))
+                agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
+                                  agent1.pos.y + (move_vec.y / ratio))
+                agent2.pos = Vec2(agent2.pos.x - (move_vec.x * ratio),
+                                  agent2.pos.y - (move_vec.y * ratio))
             end
         end
 
@@ -138,7 +138,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         using .LSModels
         list = simState.last_step[].agent_list
 
-        cAgent = Agent((x=0.2, y=0.3), pi/2, 0.01, 0.05, list[1].color ,3)
+        cAgent = Agent(Vec2(0.2, 0.3), pi/2, 0.01, 0.05, list[1].color ,3)
         push!(list, cAgent)
 
         sim_ref = Ref(simState)
