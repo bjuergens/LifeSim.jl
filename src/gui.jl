@@ -7,11 +7,11 @@ end
 module MyGui
     export start_render_loop!
     using CImGui
-
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
     @show render_source
     include(render_source)
-    using .Renderer
+    using .Renderer:init_renderer
+    using .Renderer:renderloop
     using ..MyModels
 
     # move to new pacakge for linalg
@@ -138,15 +138,42 @@ module MyGui
 
     function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState})
         @info "starting render loop..."
-        return Renderer.render(()->ui(ctrlState, simState), width = 800, height = 600, title = "A simple UI")
+        window, ctx = init_renderer(800, 600, "blubb")
+        GC.@preserve window ctx begin
+            t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), false)
+        end
+        return t
     end
-
 end
+
+
+
+module GuiTests
+# Testing-module is needed as workaround for error "ERROR: LoadError: UndefVarError: @safetestset not defined"
+# when macro is called in toplevel-block that is not a module.
+using SafeTestsets
+export doTest
+function doTest()
+@safetestset "Examples" begin
+    using ...MyGui
+    using ...MyModelExamples
+    
+    @test 0<aAgent.pos.x<1
+    @test 1+1==2  # canary
+end
+end
+end #module GuiTests
+
+if abspath(PROGRAM_FILE) == @__FILE__
+end
+
     
 if abspath(PROGRAM_FILE) == @__FILE__
     using .MyGui
     using .MyModels
     using .MyModelExamples
+    using .GuiTests
+    doTest()
     
     @info "running gui with some dummy-data for debugging..."
     function infinite_loop(state::ControlState)
@@ -162,6 +189,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     @info "starting dummy update loop..."
     t_update = infinite_loop(ctrlState)
     !isinteractive() && wait(t_render)
+    
     #!isinteractive() && wait(t_update)
     @info "starting dummy update loop...done"
 end
