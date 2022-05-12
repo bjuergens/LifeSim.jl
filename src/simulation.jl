@@ -70,18 +70,18 @@ module MySimulation
             
             if dist < agent1.size + agent2.size
                 move_dist =  agent1.size + agent2.size - dist
-                d_x = agent1.pos_x - agent2.pos_x
-                d_y = agent1.pos_y - agent2.pos_y
+                d_x = agent1.pos.x - agent2.pos.x
+                d_y = agent1.pos.y - agent2.pos.y
                 d_length = sqrt(d_x*d_x+d_y*d_y)
                 norm_direction = (d_x/d_length,d_y/d_length) 
 
-                move_vec = (move_dist*norm_direction[1],move_dist*norm_direction[2])
+                move_vec = (x=move_dist*norm_direction[1],y=move_dist*norm_direction[2])
                 ratio = (agent1.size^2) / (agent2.size^2)
 
-                agent1.pos_x += move_vec[1] / ratio
-                agent1.pos_y += move_vec[2] / ratio
-                agent2.pos_x -= move_vec[1] * ratio
-                agent2.pos_y -= move_vec[2] * ratio
+                agent1.pos = (x=agent1.pos.x + (move_vec.x / ratio), 
+                              y=agent1.pos.y + (move_vec.y / ratio))
+                agent2.pos = (x=agent2.pos.x - (move_vec.x * ratio),
+                              y=agent2.pos.y - (move_vec.y * ratio))
             end
         end
 

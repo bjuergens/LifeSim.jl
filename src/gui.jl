@@ -14,38 +14,20 @@ module MyGui
     using .Renderer
     using ..MyModels
 
-    
-    function drawAgentRect!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
-
-        CImGui.AddRectFilled(draw_list, 
-            ImVec2(
-                canvas_pos.x + ((aAgent.pos_x - aAgent.size) * canvas_size.x) , 
-                canvas_pos.y + ((aAgent.pos_y - aAgent.size) * canvas_size.y)
-            ), 
-            ImVec2(
-                canvas_pos.x + ((aAgent.pos_x + aAgent.size ) * canvas_size.x) , 
-                canvas_pos.y + ((aAgent.pos_y + aAgent.size ) * canvas_size.y)+ aAgent.size
-            ), 
-            IM_COL32(0, 255, 255, 255)
-            )
-    end
-
-    """get ratio of value between min and max"""
-    function value_to_ratio(value, min, max )
-        # todo: move this to helper
+    "linear mapping from some interval to [0,1]. Enforces boundaries"
+    function ratio_to_intverall(value, min, width )
         if value< min
             return min
         end
-        if value > max
-            return max
+        if value > min+width
+            return min+width
         end
-        width = max - min
         x = value - min
         return x/width
     end
 
-    function sim_to_pixel_koord(value, min, width )
-        # sim_pos is in [0,1]. pixel pos is 
+    "linear mapping from [0,1] to some other interval. Enforces boundaries"
+    function interval_to_ratio(value, min, width )
         if value< 0.0
             return min
         end
@@ -55,10 +37,11 @@ module MyGui
         return min + (value * width)
     end
 
+    "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
     function sim_to_pixel_point(sim_pos::Vec2, pixel_base, pixel_width)
         return ImVec2(
-            sim_to_pixel_koord(sim_pos.x, pixel_base.x, pixel_width.x) , 
-            sim_to_pixel_koord(sim_pos.y, pixel_base.y, pixel_width.y))
+            interval_to_ratio(sim_pos.x, pixel_base.x, pixel_width.x) , 
+            interval_to_ratio(sim_pos.y, pixel_base.y, pixel_width.y))
     end
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
@@ -69,24 +52,23 @@ module MyGui
             aAgent.color, 
             12)
         
-        # todo: use vec2 here
-        agent_move_x = aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size
-        agent_move_y = aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size
-        agent_move_ort_x = sin(pi/2+aAgent.direction_angle) * (aAgent.size/3)
-        agent_move_ort_y = cos(pi/2+aAgent.direction_angle) * (aAgent.size/3)
-        agent_move_ort1_x::Cfloat = aAgent.pos.x + agent_move_ort_x
-        agent_move_ort1_y::Cfloat = aAgent.pos.y + agent_move_ort_y
-        agent_move_ort2_x::Cfloat = aAgent.pos.x - agent_move_ort_x
-        agent_move_ort2_y::Cfloat = aAgent.pos.y - agent_move_ort_y
+        agent_move = (x= aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size,
+                      y= aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size)
+        agent_move_ort = (x= sin(pi/2+aAgent.direction_angle) * (aAgent.size/3),
+                          y= cos(pi/2+aAgent.direction_angle) * (aAgent.size/3))
+        agent_move_ort1 = (x= convert(Cfloat, aAgent.pos.x + agent_move_ort.x),
+                           y= convert(Cfloat, aAgent.pos.y + agent_move_ort.y))
+        agent_move_ort2 = (x= convert(Cfloat, aAgent.pos.x - agent_move_ort.x),
+                           y= convert(Cfloat, aAgent.pos.y - agent_move_ort.y))
         CImGui.AddTriangleFilled(draw_list,
-            sim_to_pixel_point((x=agent_move_x, y=agent_move_y),canvas_pos, canvas_size),
-            sim_to_pixel_point((x=agent_move_ort1_x, y=agent_move_ort1_y),canvas_pos, canvas_size),
-            sim_to_pixel_point((x=agent_move_ort2_x, y=agent_move_ort2_y),canvas_pos, canvas_size),
-            IM_COL32(0, floor(255 * value_to_ratio(aAgent.speed,0, 0.05)), 0, 255)
+            sim_to_pixel_point(agent_move,canvas_pos, canvas_size),
+            sim_to_pixel_point(agent_move_ort1,canvas_pos, canvas_size),
+            sim_to_pixel_point(agent_move_ort2,canvas_pos, canvas_size),
+            IM_COL32(0, floor(255 * ratio_to_intverall(aAgent.speed,0, 0.05)), 0, 255)
         )
 
         CImGui.AddCircleFilled(draw_list, 
-            sim_to_pixel_point((x=agent_move_x, y=agent_move_y),canvas_pos, canvas_size), 
+            sim_to_pixel_point(agent_move,canvas_pos, canvas_size), 
             canvas_size.x * aAgent.size / 10, 
             IM_COL32(255, 0,0 , 255), 
             12)
@@ -124,14 +106,7 @@ module MyGui
             )
             CImGui.AddRect(draw_list, canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(255, 255, 255, 255))
             
-                CImGui.AddRectFilled(draw_list, 
-                ImVec2(canvas_pos.x + 0.6*canvas_size.x, canvas_pos.y + 0.6* canvas_size.y), 
-                ImVec2(canvas_pos.x + 0.7*canvas_size.x, canvas_pos.y + 0.7* canvas_size.y), 
-                IM_COL32(255, 0, 255, 255)
-            )
-            
             for agent in simState[].last_step[].agent_list
-                # drawAgentRect!(draw_list, canvas_pos, canvas_size, agent)
                 drawAgentCirc!(draw_list, canvas_pos, canvas_size, agent)
             end
             CImGui.InvisibleButton("canvas", canvas_size) 

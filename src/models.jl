@@ -4,6 +4,8 @@ module MyModels
     export SimulationState, ControlState, SimulationStep, Vec2
 
     using CImGui: IM_COL32
+
+    "position in simulation-space"
     Vec2 = @NamedTuple{x::Cfloat,y::Cfloat}
 
     mutable struct Agent
