@@ -153,8 +153,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
         include("gui.jl")
         using .MyGui
         using .MyModels
+        list = simState.last_step[].agent_list
+
+        cAgent = Agent((x=0.2, y=0.3), pi/2, 0.01, 0.05, list[1].color ,3)
+        push!(list, cAgent)
+
         sim_ref = Ref(simState)
-        t_render = start_render_loop!(ctrlState, sim_ref)
+        t_render, _ = start_render_loop!(ctrlState, sim_ref)
         @info "starting simloop loop..."
         workThread = Threads.@spawn simulationLoop!($sim_ref, $ctrlState)
         !isinteractive() && wait(t_render)
