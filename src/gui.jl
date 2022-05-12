@@ -28,21 +28,20 @@ module MyGui
     end
 
     "linear mapping from [0,1] to some other interval. Enforces boundaries"
-    function interval_to_ratio(value, min, width )
+    function interval_to_ratio(value::Cfloat, min::Cfloat, width::Cfloat )
         if value< 0.0
             return min
         end
         if value > 1.0
-            return max
+            return width
         end
         return min + (value * width)
     end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
-    function sim_to_pixel_point(sim_pos::Vec2, pixel_base, pixel_width)
-        return ImVec2(
-            interval_to_ratio(sim_pos.x, pixel_base.x, pixel_width.x) , 
-            interval_to_ratio(sim_pos.y, pixel_base.y, pixel_width.y))
+    function sim_to_pixel_point(sim_pos::Vec2, pixel_base::CImGui.LibCImGui.ImVec2, pixel_width::CImGui.LibCImGui.ImVec2)
+        return ImVec2(interval_to_ratio(sim_pos.x, pixel_base.x, pixel_width.x),
+                      interval_to_ratio(sim_pos.y, pixel_base.y, pixel_width.y))
     end
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
