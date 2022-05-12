@@ -37,30 +37,22 @@ module MyModels
     end
 end
 
-
+"""viable example for all models"""
 module MyModelExamples
-
-    using ..MyModels
-
-    using CImGui: IM_COL32
     export ctrlState, simState, aAgent, bAgent, stepStep
-
-    # aAgent = makeAgent(1,aGenome)
+    using ..MyModels
+    using CImGui: IM_COL32
     aAgent = Agent((x=0.3, y=0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
-    bAgent = Agent((x=0.6, y=0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)
-    
-
+    bAgent = Agent((x=0.6, y=0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)   
     ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
     stepStep = SimulationStep(1, [aAgent, bAgent], 0.1)
     simState = SimulationState(stepStep)
-
-    @show typeof(stepStep.agent_list)
-    
 end
 
 
     
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .MyModelExamples
+    using ..MyModelExamples
     @info "ModelExamples" aAgent bAgent ctrlState simState stepStep
+    include("../tests/models.test.jl")
 end
