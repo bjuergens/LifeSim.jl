@@ -5,6 +5,7 @@ module MyModels
 
     using CImGui: IM_COL32
 
+
     mutable struct Agent
         pos_x::Cfloat
         pos_y::Cfloat
@@ -49,11 +50,10 @@ module MyModelExamples
     using CImGui: IM_COL32
     export ctrlState, simState, aAgent, bAgent, stepStep
 
-    aGenome = [0.3, 0.3, pi/2, 0.01, 0.11]
-    bGenome = [0.6, 0.6, 2*pi, 0.02, 0.13]
-
-    aAgent = makeAgent(1,aGenome)
-    bAgent = makeAgent(10,bGenome)
+    # aAgent = makeAgent(1,aGenome)
+    aAgent = Agent(0.3, 0.3, pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
+    bAgent = Agent(0.6, 0.6, 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)
+    
 
     ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
     stepStep = SimulationStep(1, [aAgent, bAgent], 0.1)
