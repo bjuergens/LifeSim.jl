@@ -119,13 +119,7 @@ module LinTests
 export doTest
 using Test
 using ..LSSimulation
-
-function doTest()
-    @testset "simtest" begin
-        @test 1+1==2  # canary
-    end
-end
-end
+using ..LSModelExamples
 
 function test_console()
     ctrlThread = Threads.@spawn stop_after(1.0)
@@ -134,23 +128,33 @@ function test_console()
     wait(ctrlThread)
     @info simState.last_step[].num_step
     @info simState
+    return simState.last_step[].num_step
+end
+
+function stop_after(time_s)
+    @info "stop_after..."
+    sleep(time_s)
+    ctrlState.is_stop = true
+    @info "stop_after... done" 
+end
+
+function doTest()
+    @testset "simtest" begin
+        @test 1+1==2  # canary
+        # @test test_console() > 10
+    end
+end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     using .LinTests
     doTest()
-    
-    cli_test = true
-    function stop_after(time_s)
-        @info "stop_after..."
-        sleep(time_s)
-        ctrlState.is_stop = true
-        @info "stop_after... done" 
-    end
+
+    cli_test = false
     using .LSModelExamples
     using .LSSimulation
     if cli_test
-        test_console()
+        @info "blubb"
     else
         include("gui.jl")
         using .LSGui
