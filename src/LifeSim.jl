@@ -3,8 +3,8 @@ module MyMain
 
     export main
 
-    include("models.jl")
     include("lin.jl")
+    include("models.jl")
     include("gui.jl")
     include("simulation.jl")
     
