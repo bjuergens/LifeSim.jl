@@ -134,33 +134,37 @@ function run_headless(max_time = .5)
 end
 
 
+function test_collision(pos1, pos2, size1, size2)
+    tAgent1 = deepcopy(aAgent)
+    tAgent2 = deepcopy(bAgent)
+    tAgent1.pos = pos1
+    tAgent2.pos = pos2
+    tAgent1.size = size1
+    tAgent2.size = size2
+    pre_dist = distance(tAgent1.pos, tAgent2.pos)
+    collision(tAgent1, tAgent2)
+
+    # since since their distance was smaller than their sumed sized, they did move
+    @test distance(tAgent1.pos, tAgent2.pos) > pre_dist
+    @test distance(tAgent1.pos, pos1) > 0.01
+
+    # both got move in exact opposite directions
+    @test direction(tAgent1.pos, pos1) ≈ direction(tAgent2.pos, pos2) - pi
+
+    # because size is equal, both got moved by same amount
+    @test distance(tAgent1.pos, pos1) ≈ distance(tAgent2.pos, pos2) 
+
+    # after each collision they should exactly touch
+    @test distance(tAgent1.pos, tAgent2.pos) ≈ tAgent1.size + tAgent2.size
+end
 
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
         @test run_headless() > 5
-        tAgent1 = deepcopy(aAgent)
-        tAgent2 = deepcopy(bAgent)
-        pre_pos1 = Vec2(0.35,0.3)
-        pre_pos2 = Vec2(0.3,0.35)
-        tAgent1.pos = pre_pos1
-        tAgent2.pos = pre_pos2
-        tAgent1.size = 0.05
-        tAgent2.size = 0.05
-        pre_dist = distance(tAgent1.pos, tAgent2.pos)
-        collision(tAgent1, tAgent2)
-
-        # since since their distance was smaller than their sumed sized, they did move
-        @test distance(tAgent1.pos, tAgent2.pos) > pre_dist
-        @test distance(tAgent1.pos, pre_pos1) > 0.01
-
-        # both got move in exact opposite directions
-        @test direction(tAgent1.pos, pre_pos1) ≈ direction(tAgent2.pos, pre_pos2) - pi
-
-        # because size is equal, both got moved by same amount
-        @test distance(tAgent1.pos, pre_pos1) ≈ distance(tAgent2.pos, pre_pos2) 
-
-        @test distance(tAgent1.pos, tAgent2.pos) ≈ tAgent1.size + tAgent2.size broken=false
+        test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
+        test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
+        test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)
     end
 end
 end
