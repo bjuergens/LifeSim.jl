@@ -4,11 +4,13 @@ module LSLin
     export Vec2DTest
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
-    export angle_to_axis, move_in_direction
+    export angle_to_axis, move_in_direction, direction, distance
 
     # using LinearAlgebra
     using StaticArrays
+    using Distances: Euclidean
     
+    const dist_euclid = Euclidean() # initiate one instance at compiletime for faster speed, maybe
 
     struct Vec2{T} <: FieldVector{2, T}
         x::T
@@ -65,15 +67,26 @@ module LSLin
         return x/width
     end
 
+    "return angle between vector and x-axis"
     function angle_to_axis(p::Vec2)
         return atan(p.x,p.y)
     end
 
+    "return angle between 2 points, where x-axis is 0"
+    function direction(p1::Vec2, p2::Vec2)
+        return angle_to_axis(p1-p2)
+    end
+
+    "move 1 point in the direction of another by distance"
     function move_in_direction(p::Vec2, direction::Number, distance::Number)
         return Vec2( p.x + sin(direction) * distance,
                      p.y + cos(direction) * distance)
     end
 
+    "Euclidean distance between two points"
+    function distance(p1::Vec2, p2::Vec2)
+         return dist_euclid((p1.x,p2.x), (p1.y,p2.y))
+    end
 
 end #module 
 
@@ -111,6 +124,13 @@ function doTest()
 
     # move one point in the direction of another point by their distance, then the should end up on the same spot
     @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
+    
+    p1 = Vec2(12,23)
+    p2 = Vec2(34,45)
+    dir = direction(p1,p2)
+    dist = distance(p1,p2)
+    @show dir dist
+    @test move_in_direction(p1, dir, dist) ≈ p2 broken=true
 
     # free stuff gained from using StaticArrays
     @test Vec2(1.0,1.0) + Vec2(1.0,1.0) ≈ Vec2(2.0,2.0)
