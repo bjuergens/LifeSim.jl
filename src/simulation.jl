@@ -22,6 +22,7 @@ module LSSimulation
     COL_COLLISION = IM_COL32(255,255,40,255)
 
     function collision(agent1::Agent, agent2::Agent, dist)
+        # todo: use LSLin for this
         move_dist =  agent1.size + agent2.size - dist
         d_x = agent1.pos.x - agent2.pos.x
         d_y = agent1.pos.y - agent2.pos.y
@@ -114,6 +115,18 @@ module LSSimulation
     end
 end
 
+module LinTests
+export doTest
+using Test
+using ..LSSimulation
+
+function doTest()
+    @testset "simtest" begin
+        @test 1+1==2  # canary
+    end
+end
+end
+
 function test_console()
     ctrlThread = Threads.@spawn stop_after(1.0)
     simulationLoop!(Ref(simState), ctrlState)
@@ -124,7 +137,10 @@ function test_console()
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    cli_test = false
+    using .LinTests
+    doTest()
+    
+    cli_test = true
     function stop_after(time_s)
         @info "stop_after..."
         sleep(time_s)
