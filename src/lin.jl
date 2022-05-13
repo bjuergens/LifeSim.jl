@@ -28,6 +28,7 @@ module LSLin
     end
 
     function wrap(value::Vec2, start::Vec2, width::Vec2)
+        # explicitly unfolding seems to be faster than using implicit elementwise, maybe
         return Vec2(wrap(value.x, start.x, width.x),
                     wrap(value.y, start.y, width.y))
     end
