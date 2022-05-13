@@ -121,26 +121,23 @@ using Test
 using ..LSSimulation
 using ..LSModelExamples
 
-function test_console()
+function run_headless(max_time = 1.0)
     test_ctrlState = deepcopy(ctrlState)
     test_simState = deepcopy(simState)
-    ctrlThread = Threads.@spawn stop_after!(test_ctrlState, 1.0)
+    ctrlThread = Threads.@spawn begin
+        sleep(max_time) 
+        test_ctrlState.is_stop = true
+    end
     simulationLoop!(Ref(test_simState), test_ctrlState)
     wait(ctrlThread)
     return test_simState.last_step[].num_step
 end
 
-function stop_after!(test_ctrlState, time_s)
-    @info "stop_after..."
-    sleep(time_s)
-    test_ctrlState.is_stop = true
-    @info "stop_after... done" 
-end
 
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        @test test_console() > 10
+        @test run_headless() > 10
     end
 end
 end
@@ -151,7 +148,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     using .LSSimulation
     doTest()
 
-    do_open = true
+    do_open = false
     if do_open
         include("gui.jl")
         using .LSGui
