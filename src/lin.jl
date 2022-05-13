@@ -78,7 +78,8 @@ module LSLin
 
     "return angle between vector and x-axis"
     function angle_to_axis(p::Vec2)
-        if p.x < Ɛ && p.y < Ɛ
+        if -Ɛ < p.x < Ɛ && -Ɛ < p.y < Ɛ
+            @debug "input" p Ɛ
             @debug "atan not defined for 0 values" stacktrace()[3:end]
         end
         return atan(p.x,p.y)
@@ -199,7 +200,7 @@ function doTest()
 
     @test direction(Vec2(0,0), Vec2(1,0))   ≈ -pi/2
     @test direction(Vec2(12,3), Vec2(13,3)) ≈ -pi/2
-    # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0
+    # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ -pi/2
     
     p1 = Vec2(12,23)
