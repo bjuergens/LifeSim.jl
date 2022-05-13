@@ -202,6 +202,16 @@ function doTest()
     @test direction(Vec2(12,3), Vec2(13,3)) ≈ -pi/2
     # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ -pi/2
+
+    # value in opposite directions should be inverse of each other (within 2pi)
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ -direction(Vec2(1,0), Vec2(0,0) ) 
+    @test direction(Vec2(1,1), Vec2(1,0)) ≈ -direction(Vec2(1,0), Vec2(1,1) ) broken=true
+    @test direction(Vec2(123,213), Vec2(456,567)) ≈ -direction(Vec2(456,567),Vec2(123,213) ) broken=true
+
+    @test distance(Vec2(0,0), Vec2(1,0)) ≈ 1
+    @test distance(Vec2(0,0), Vec2(3,4)) ≈ 5
+    @test distance(Vec2(-10,-10), Vec2(-13,-14)) ≈ 5
+    @test distance(Vec2(0,0), Vec2(-3,-4)) ≈ 5
     
     p1 = Vec2(12,23)
     p2 = Vec2(34,45)
