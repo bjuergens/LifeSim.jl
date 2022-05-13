@@ -122,40 +122,37 @@ using ..LSSimulation
 using ..LSModelExamples
 
 function test_console()
-    ctrlThread = Threads.@spawn stop_after(1.0)
-    simulationLoop!(Ref(simState), ctrlState)
-    @info simState.last_step[].num_step
+    test_ctrlState = deepcopy(ctrlState)
+    test_simState = deepcopy(simState)
+    ctrlThread = Threads.@spawn stop_after!(test_ctrlState, 1.0)
+    simulationLoop!(Ref(test_simState), test_ctrlState)
     wait(ctrlThread)
-    @info simState.last_step[].num_step
-    @info simState
-    return simState.last_step[].num_step
+    return test_simState.last_step[].num_step
 end
 
-function stop_after(time_s)
+function stop_after!(test_ctrlState, time_s)
     @info "stop_after..."
     sleep(time_s)
-    ctrlState.is_stop = true
+    test_ctrlState.is_stop = true
     @info "stop_after... done" 
 end
 
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        # @test test_console() > 10
+        @test test_console() > 10
     end
 end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     using .LinTests
-    doTest()
-
-    cli_test = false
     using .LSModelExamples
     using .LSSimulation
-    if cli_test
-        @info "blubb"
-    else
+    doTest()
+
+    do_open = true
+    if do_open
         include("gui.jl")
         using .LSGui
         using .LSModels
