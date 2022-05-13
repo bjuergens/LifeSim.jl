@@ -26,7 +26,7 @@ module LSSimulation
         d_x = agent1.pos.x - agent2.pos.x
         d_y = agent1.pos.y - agent2.pos.y
         d_length = sqrt(d_x*d_x+d_y*d_y)
-        move_dist =  (agent1.size + agent2.size - d_length)
+        move_dist =  (agent1.size + agent2.size - d_length) / 2
         norm_direction = (d_x/d_length,d_y/d_length) 
         move_vec = Vec2(move_dist*norm_direction[1],
                         move_dist*norm_direction[2])
