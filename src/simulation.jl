@@ -27,16 +27,16 @@ module LSSimulation
         for agent in simStep.agent_list
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
 
-            agent_pos_x = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
-            agent_pos_y = clip(pos_new.y, agent.size, 1.0 - 2agent.size)
+            agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
+            agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
             
             if agent.id == 2
                 a_direction_angle = agent.direction_angle + 0.05
             else
                 a_direction_angle = agent.direction_angle - 0.05
             end 
-            a_direction_angle = wrap(a_direction_angle, -pi, 2pi)
-
+            a_direction_angle = wrap(a_direction_angle, -pi, 2pi)            
+            
             push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
 
