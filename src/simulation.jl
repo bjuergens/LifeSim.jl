@@ -21,6 +21,22 @@ module LSSimulation
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
 
+    function collision(agent1::Agent, agent2::Agent, dist)
+        move_dist =  agent1.size + agent2.size - dist
+        d_x = agent1.pos.x - agent2.pos.x
+        d_y = agent1.pos.y - agent2.pos.y
+        d_length = sqrt(d_x*d_x+d_y*d_y)
+        norm_direction = (d_x/d_length,d_y/d_length) 
+
+        move_vec = (x=move_dist*norm_direction[1],y=move_dist*norm_direction[2])
+        ratio = (agent1.size^2) / (agent2.size^2)
+
+        agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
+                            agent1.pos.y + (move_vec.y / ratio))
+        agent2.pos = Vec2(agent2.pos.x - (move_vec.x * ratio),
+                            agent2.pos.y - (move_vec.y * ratio))
+    end
+
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_individually = []
 
@@ -42,7 +58,6 @@ module LSSimulation
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
 
-            # dist = Euclidean()((agent1.pos.x,agent1.pos.y), (agent2.pos.x,agent2.pos.y))
             dist = distance(agent1.pos, agent2.pos)
 
             if dist < 0.00001
@@ -51,19 +66,7 @@ module LSSimulation
             end
             
             if dist < agent1.size + agent2.size
-                move_dist =  agent1.size + agent2.size - dist
-                d_x = agent1.pos.x - agent2.pos.x
-                d_y = agent1.pos.y - agent2.pos.y
-                d_length = sqrt(d_x*d_x+d_y*d_y)
-                norm_direction = (d_x/d_length,d_y/d_length) 
-
-                move_vec = (x=move_dist*norm_direction[1],y=move_dist*norm_direction[2])
-                ratio = (agent1.size^2) / (agent2.size^2)
-
-                agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
-                                  agent1.pos.y + (move_vec.y / ratio))
-                agent2.pos = Vec2(agent2.pos.x - (move_vec.x * ratio),
-                                  agent2.pos.y - (move_vec.y * ratio))
+                collision(agent1, agent2, dist)
             end
         end
 
