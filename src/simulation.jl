@@ -25,11 +25,10 @@ module LSSimulation
         agent_list_individually = []
 
         for agent in simStep.agent_list
-            agent_pos_x = agent.pos.x + sin(agent.direction_angle) * agent.speed
-            agent_pos_y = agent.pos.y + cos(agent.direction_angle) *agent.speed
+            pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
 
-            agent_pos_x = clip(agent_pos_x, agent.size, 1.0 - 2agent.size)
-            agent_pos_y = clip(agent_pos_y, agent.size, 1.0 - 2agent.size)
+            agent_pos_x = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
+            agent_pos_y = clip(pos_new.y, agent.size, 1.0 - 2agent.size)
             
             if agent.id == 2
                 a_direction_angle = agent.direction_angle + 0.05
