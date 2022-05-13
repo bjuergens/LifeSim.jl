@@ -5,6 +5,7 @@ module LSLin
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction, direction, distance
+    export direction
 
     # using LinearAlgebra
     using StaticArrays
@@ -88,7 +89,7 @@ module LSLin
 
     "return angle between 2 points, where x-axis is 0"
     function direction(p1::Vec2, p2::Vec2)
-        return angle_to_axis(p1-p2)
+        return angle_to_axis(p2-p1)
     end
 
     "move 1 point in the direction of another by distance"
@@ -196,30 +197,27 @@ function doTest()
     @test_distance Vec2(-12,-23) Vec2(-34,-45)    
 
 
-    # move one point in the direction of another point by their distance, then the should end up on the same spot
-    @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
-
-    @test direction(Vec2(0,0), Vec2(1,0))   ≈ -pi/2
-    @test direction(Vec2(12,3), Vec2(13,3)) ≈ -pi/2
+    # full circle is 2pi, and it increases counter clockwise
+    @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
+    @test direction(Vec2(12,3), Vec2(13,3)) ≈ pi/2
     # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ -pi/2
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
 
     # value in opposite directions should be inverse of each other (within 2pi)
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ -direction(Vec2(1,0), Vec2(0,0) ) 
-    @test direction(Vec2(1,1), Vec2(1,0)) ≈ -direction(Vec2(1,0), Vec2(1,1) ) broken=true
-    @test direction(Vec2(123,213), Vec2(456,567)) ≈ -direction(Vec2(456,567),Vec2(123,213) ) broken=true
+    @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi
+    @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
 
     @test distance(Vec2(0,0), Vec2(1,0)) ≈ 1
     @test distance(Vec2(0,0), Vec2(3,4)) ≈ 5
     @test distance(Vec2(-10,-10), Vec2(-13,-14)) ≈ 5
     @test distance(Vec2(0,0), Vec2(-3,-4)) ≈ 5
     
+    # move one point in the direction of another point by their distance, then the should end up on the same spot
+    @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
     p1 = Vec2(12,23)
     p2 = Vec2(34,45)
-    dir = direction(p1,p2)
-    dist = distance(p1,p2)
-    # @show dir dist
-    @test move_in_direction(p1, dir, dist) ≈ p2 broken=true
+    @test move_in_direction(p1, direction(p1,p2), distance(p1,p2)) ≈ p2 
 
     function myStackOverflowError()
         # https://github.com/JuliaArrays/StaticArrays.jl/issues/1026
