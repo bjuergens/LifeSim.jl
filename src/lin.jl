@@ -5,6 +5,7 @@ module LSLin
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction, direction, distance
+    export distance_new # temp
 
     # using LinearAlgebra
     using StaticArrays
@@ -87,16 +88,35 @@ module LSLin
     function distance(p1::Vec2, p2::Vec2)
          return dist_euclid((p1.x,p2.x), (p1.y,p2.y))
     end
+    function distance_new(p1::Vec2, p2::Vec2)
+        return dist_euclid((p1.x,p1.y), (p2.x,p2.y))
+    end
 
 end #module 
 
 
 module LinTests
 using SafeTestsets
+using Test
 export doTest
+using ..LSLin
+
+
+function distance_manual(p::Vec2)
+    return sqrt(p.x^2 + p.y^2)
+end
+function distance_manual(p1::Vec2, p2::Vec2)
+    return distance_manual(p2-p1)
+end
+
+
+macro test_distance(p1, p2, atol=0.0)
+    return :( @test distance_manual($p1,$p2) ≈ distance_new($p1,$p2)  atol=$atol )
+end
+
 function doTest()
-@safetestset "Examples" begin
-    using ...LSLin
+@testset "Examples" begin
+
     @test 1+1==2  # canary
     @test wrap(0.3,0,1) ≈ 0.3
     @test wrap(1.5,0,1) ≈ 0.5
@@ -121,6 +141,23 @@ function doTest()
     @test Vec2(0.01,0.01) ≉ Vec2(0.,0.) atol=0.002
     @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
     @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
+
+    @test distance_manual(Vec2(1,1), Vec2(1,2)) ≈ 1
+    @test distance_manual(Vec2(1,1), Vec2(1,0)) ≈ 1
+    @test distance_manual(Vec2(0,0), Vec2(1,1)) ≈ sqrt(2)
+    @test distance_manual(Vec2(0,0), Vec2(2,2)) ≈ sqrt(8)
+    @test distance_new(Vec2(1,1), Vec2(1,2)) ≈ distance_manual(Vec2(1,1), Vec2(1,2))
+    @test distance_new(Vec2(1,1), Vec2(1,0)) ≈ distance_manual(Vec2(1,1), Vec2(1,0))
+    @test distance_new(Vec2(0,0), Vec2(1,1)) ≈ distance_manual(Vec2(0,0), Vec2(1,1))
+    @test distance_new(Vec2(0,0), Vec2(2,2)) ≈ distance_manual(Vec2(0,0), Vec2(2,2))
+
+    @test_distance Vec2(0,0) Vec2(1,0)
+    @test_distance Vec2(1,1) Vec2(1,2)
+    @test_distance Vec2(1,1) Vec2(1,2)
+    @test_distance Vec2(0,0) Vec2(1,0)
+    @test_distance Vec2(-2,0) Vec2(2,0)
+    @test_distance Vec2(12,23) Vec2(34,45)
+    @test_distance Vec2(12,-23) Vec2(-34,45)    
 
     # move one point in the direction of another point by their distance, then the should end up on the same spot
     @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
