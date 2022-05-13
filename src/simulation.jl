@@ -5,7 +5,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSSimulation
-    export simulationLoop!, lk_sim, lk_ctrl
+    export simulationLoop!, lk_sim, lk_ctrl, collision
 
     using ..LSModels
     using ..LSLin
@@ -21,21 +21,20 @@ module LSSimulation
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
 
-    function collision(agent1::Agent, agent2::Agent, dist)
+    function collision(agent1::Agent, agent2::Agent)
         # todo: use LSLin for this
-        move_dist =  agent1.size + agent2.size - dist
         d_x = agent1.pos.x - agent2.pos.x
         d_y = agent1.pos.y - agent2.pos.y
         d_length = sqrt(d_x*d_x+d_y*d_y)
+        move_dist =  (agent1.size + agent2.size - d_length)
         norm_direction = (d_x/d_length,d_y/d_length) 
-
-        move_vec = (x=move_dist*norm_direction[1],y=move_dist*norm_direction[2])
+        move_vec = Vec2(move_dist*norm_direction[1],
+                        move_dist*norm_direction[2])
         ratio = (agent1.size^2) / (agent2.size^2)
-
         agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
-                            agent1.pos.y + (move_vec.y / ratio))
+                          agent1.pos.y + (move_vec.y / ratio))
         agent2.pos = Vec2(agent2.pos.x - (move_vec.x * ratio),
-                            agent2.pos.y - (move_vec.y * ratio))
+                          agent2.pos.y - (move_vec.y * ratio))
     end
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
@@ -67,7 +66,7 @@ module LSSimulation
             end
             
             if dist < agent1.size + agent2.size
-                collision(agent1, agent2, dist)
+                collision(agent1, agent2)
             end
         end
 
@@ -120,8 +119,9 @@ export doTest
 using Test
 using ..LSSimulation
 using ..LSModelExamples
+using ..LSLin
 
-function run_headless(max_time = 1.0)
+function run_headless(max_time = .5)
     test_ctrlState = deepcopy(ctrlState)
     test_simState = deepcopy(simState)
     ctrlThread = Threads.@spawn begin
@@ -134,10 +134,33 @@ function run_headless(max_time = 1.0)
 end
 
 
+
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        @test run_headless() > 10
+        @test run_headless() > 5
+        tAgent1 = deepcopy(aAgent)
+        tAgent2 = deepcopy(bAgent)
+        pre_pos1 = Vec2(0.35,0.3)
+        pre_pos2 = Vec2(0.3,0.35)
+        tAgent1.pos = pre_pos1
+        tAgent2.pos = pre_pos2
+        tAgent1.size = 0.05
+        tAgent2.size = 0.05
+        pre_dist = distance(tAgent1.pos, tAgent2.pos)
+        collision(tAgent1, tAgent2)
+
+        # since since their distance was smaller than their sumed sized, they did move
+        @test distance(tAgent1.pos, tAgent2.pos) > pre_dist
+        @test distance(tAgent1.pos, pre_pos1) > 0.01
+
+        # both got move in exact opposite directions
+        @test direction(tAgent1.pos, pre_pos1) ≈ direction(tAgent2.pos, pre_pos2) - pi
+
+        # because size is equal, both got moved by same amount
+        @test distance(tAgent1.pos, pre_pos1) ≈ distance(tAgent2.pos, pre_pos2) 
+
+        @test distance(tAgent1.pos, tAgent2.pos) ≈ tAgent1.size + tAgent2.size broken=false
     end
 end
 end
