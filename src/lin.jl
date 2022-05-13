@@ -87,12 +87,12 @@ module LSLin
         return atan(p.x,p.y)
     end
 
-    "return angle between 2 points, where x-axis is 0"
+    "return angle between 2 points, where x-axis is 0 and y-axis is pi/2"
     function direction(p1::Vec2, p2::Vec2)
         return angle_to_axis(p2-p1)
     end
 
-    "move 1 point in the direction of another by distance"
+    "move point1 in the direction by distance"
     function move_in_direction(p::Vec2, direction::Number, distance::Number)
         return Vec2( p.x + sin(direction) * distance,
                      p.y + cos(direction) * distance)
@@ -102,6 +102,7 @@ module LSLin
     function distance(p1::Vec2, p2::Vec2)
         return dist_euclid((p1.x,p1.y), (p2.x,p2.y))
     end
+    "Euclidean distance from point to origin"
     function distance(p1::Vec2)
         return dist_euclid((p1.x,p1.y), Vec2(0,0))
     end
@@ -161,6 +162,7 @@ function doTest()
     @test sin.(Vec2(pi,pi))  ≈ Vec2(0,0) atol=1e-15
     @test sin.(0.5*Vec2(pi,pi))  ≈ Vec2(1,1) atol=1e-15
 
+    # move along axes
     @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
     @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
 
@@ -182,6 +184,12 @@ function doTest()
     # should wrap around
     @test move_in_direction(Vec2(3,3), -3pi/4, sqrt(2)) ≈ move_in_direction(Vec2(3,3), -3pi/4 + 2pi, sqrt(2)) 
 
+    # test some simple distance 
+    @test distance(Vec2(0,0), Vec2(1,0)) ≈ 1
+    @test distance(Vec2(0,0), Vec2(3,4)) ≈ 5
+    @test distance(Vec2(-10,-10), Vec2(-13,-14)) ≈ 5
+    @test distance(Vec2(0,0), Vec2(-3,-4)) ≈ 5
+
     # rudimentary test on test-method
     @test distance_manual(Vec2(1,1), Vec2(1,2)) ≈ 1
     @test distance_manual(Vec2(1,1), Vec2(1,0)) ≈ 1
@@ -190,12 +198,8 @@ function doTest()
 
     # compare fast euclidean from module with simple test-version
     @test_distance Vec2(0,0) Vec2(1,0)
-    @test_distance Vec2(0,0) Vec2(1,1) 
-    @test_distance Vec2(0,0) Vec2(2,2) 
-    @test_distance Vec2(1,1) Vec2(1,2) 
     @test_distance Vec2(1,1) Vec2(1,0) 
     @test_distance Vec2(-2,0) Vec2(2,0)
-    @test_distance Vec2(12,23) Vec2(34,45)
     @test_distance Vec2(12,-23) Vec2(-34,45)   
     @test_distance Vec2(-12,-23) Vec2(-34,-45)    
 
@@ -211,15 +215,10 @@ function doTest()
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
 
     # value in opposite directions should be inverse of each other (within 2pi)
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ -direction(Vec2(1,0), Vec2(0,0) ) 
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi
     @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi
     @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
 
-    @test distance(Vec2(0,0), Vec2(1,0)) ≈ 1
-    @test distance(Vec2(0,0), Vec2(3,4)) ≈ 5
-    @test distance(Vec2(-10,-10), Vec2(-13,-14)) ≈ 5
-    @test distance(Vec2(0,0), Vec2(-3,-4)) ≈ 5
-    
     # move one point in the direction of another point by their distance, then the should end up on the same spot
     @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
     p1 = Vec2(12,23)
