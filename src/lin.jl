@@ -102,6 +102,9 @@ module LSLin
     function distance(p1::Vec2, p2::Vec2)
         return dist_euclid((p1.x,p1.y), (p2.x,p2.y))
     end
+    function distance(p1::Vec2)
+        return dist_euclid((p1.x,p1.y), Vec2(0,0))
+    end
 
 end #module 
 
@@ -196,6 +199,10 @@ function doTest()
     @test_distance Vec2(12,-23) Vec2(-34,45)   
     @test_distance Vec2(-12,-23) Vec2(-34,-45)    
 
+    # test for 1d distance
+    @test distance(Vec2(0,0)) ≈ 0
+    @test distance(Vec2(-11,0)) ≈ 11
+    @test distance(Vec2(-11,11)) ≈ sqrt(2*11*11)
 
     # full circle is 2pi, and it increases counter clockwise
     @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
