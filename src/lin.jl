@@ -1,21 +1,32 @@
 
 
 module LSLin
+    export Vec2DTest
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction
 
-    struct Vec2
-        x::Cfloat
-        y::Cfloat
-    end    
-    Base.isapprox(p1::Vec2, p2::Vec2; kw...) =  Base.isapprox(p1.x, p2.x;kw...) && Base.isapprox(p1.y, p2.y; kw...)
+    # using LinearAlgebra
+    using StaticArrays
+    
+
+    struct Vec2{T} <: FieldVector{2, T}
+        x::T
+        y::T
+    end
+    StaticArrays.similar_type(::Type{<:Vec2}, ::Type{T}, s::Size{(2,)}) where {T} = Vec2{T}
+    
 
     "if value is outside interval, wrap once"
     function wrap(value::Number, start::Number, width::Number)
         value = value>start+width ? value-width : value
         value = value<start ? value+width : value
         return value
+    end
+
+    function wrap(value::Vec2, start::Vec2, width::Vec2)
+        return Vec2(wrap(value.x, start.x, width.x),
+                    wrap(value.y, start.y, width.y))
     end
 
     "if value is outside interval, set to border"
@@ -98,8 +109,12 @@ function doTest()
     @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
     @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
 
+    #@test Vec2(1.0,1.0) + Vec2(1.0,1.0) ≈ Vec2(2.0,2.0)
+
     # move one point in the direction of another point by their distance, then the should end up on the same spot
     @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
+
+
 end
 end
 end #module LinTests
