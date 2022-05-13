@@ -36,13 +36,14 @@ module LSSimulation
                 a_direction_angle = agent.direction_angle - 0.05
             end 
             a_direction_angle = wrap(a_direction_angle, -pi, 2pi)            
-            
+
             push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
 
-            dist = Euclidean()((agent1.pos.x,agent1.pos.y), (agent2.pos.x,agent2.pos.y))
+            # dist = Euclidean()((agent1.pos.x,agent1.pos.y), (agent2.pos.x,agent2.pos.y))
+            dist = distance(agent1.pos, agent2.pos)
 
             if dist < 0.00001
                 @warn "dist ist very low" dist
