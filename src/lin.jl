@@ -12,7 +12,7 @@ module LSLin
     Base.isapprox(p1::Vec2, p2::Vec2; kw...) =  Base.isapprox(p1.x, p2.x;kw...) && Base.isapprox(p1.y, p2.y; kw...)
 
     "if value is outside interval, wrap once"
-    function wrap(value, start, width)
+    function wrap(value::Number, start::Number, width::Number)
         value = value>start+width ? value-width : value
         value = value<start ? value+width : value
         return value
