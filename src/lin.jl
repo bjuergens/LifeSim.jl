@@ -217,7 +217,7 @@ function doTest()
     p2 = Vec2(34,45)
     dir = direction(p1,p2)
     dist = distance(p1,p2)
-    @show dir dist
+    # @show dir dist
     @test move_in_direction(p1, dir, dist) ≈ p2 broken=true
 
     function myStackOverflowError()
@@ -228,7 +228,8 @@ function doTest()
         return true
     end
 
-    @test myStackOverflowError() broken=true  
+    # dont even run with broken, because it takes a little longer
+    # @test myStackOverflowError() broken=true  
 
 end
 end
