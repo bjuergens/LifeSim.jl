@@ -19,7 +19,7 @@ module LSLin
     end
 
     "if value is outside interval, set to border"
-    function clip(value, start, width)
+    function clip(value::Number, start::Number, width::Number)
         
         if value > start+width
             return  start+width
@@ -32,7 +32,7 @@ module LSLin
     end
 
     "linear mapping from some interval to [0,1]. Enforces boundaries"
-    function ratio_to_intverall(value, start, width )
+    function ratio_to_intverall(value::Number, start::Number, width::Number)
         if value< 0.0
             return start
         end
@@ -43,7 +43,7 @@ module LSLin
     end
 
     "linear mapping from [0,1] to some other interval. Enforces boundaries"
-    function interval_to_ratio(value, start, width )
+    function interval_to_ratio(value::Number, start::Number, width::Number)
         if value< start
             return start
         end
