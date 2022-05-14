@@ -20,6 +20,7 @@ module LSSimulation
     COL_INERT = IM_COL32(40,50,40,255)
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
+    WORLD_CENTER = Vec2(0.5,0.5)
 
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
@@ -33,6 +34,31 @@ module LSSimulation
         agent2.pos = agent2.pos - (move_vec * ratio)
     end
 
+    struct SensorInput
+        compass_north::Cfloat ## direction to y-axis with respect to current direction
+        compass_center::Cfloat ## direction to world middle with respect to current direction
+    end
+
+    function makeSensorInput(aAgent)
+       
+        # direction-angle points east
+        compass_north = aAgent.direction_angle + pi/2
+        
+        abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
+        compass_center =  abs_direction_to_center + aAgent.direction_angle
+
+        @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
+        return SensorInput(compass_north, compass_center)
+    end
+
+    struct ActionIntention
+        rotate::Cfloat ## relative desired rotation, in [-1,1]
+    end
+
+    function agent_think(input::SensorInput)
+        return ActionIntention(1.0)
+    end
+
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_individually = []
 
@@ -42,6 +68,7 @@ module LSSimulation
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
             agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
             
+
             if agent.id == 2
                 a_direction_angle = agent.direction_angle + 0.05
             else
@@ -129,6 +156,15 @@ function run_headless(max_time = .5)
     return test_simState.last_step[].num_step
 end
 
+function applyMakeSensor(pos, dir)
+    
+    tAgent1 = deepcopy(aAgent)
+    tAgent1.pos = pos
+    tAgent1.direction_angle = dir
+    result = LSSimulation.makeSensorInput(tAgent1)
+    @test result.compass_north > 0
+    return result
+end
 
 function test_collision(pos1, pos2, size1, size2)
     tAgent1 = deepcopy(aAgent)
@@ -161,7 +197,14 @@ function doTest()
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)
-    end
+
+        c = LSSimulation.WORLD_CENTER
+        @test applyMakeSensor(c, 0).compass_north ≈ pi/2
+        
+        # agent is right off center with orientation along x-axis, then the center should be exactly behind it
+        @test applyMakeSensor( c + Vec2(0.1,0.0), 0).compass_center ≈ pi broken=true
+        # @test applyMakeSensor(Vec2(0.2,0.2), 0) ≈ LSSimulation.SensorInput(pi/2, pi/4)
+    end 
 end
 end
 
