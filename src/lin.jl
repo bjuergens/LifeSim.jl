@@ -4,6 +4,7 @@ module LSLin
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction, direction, distance, stretch_to_length
+    export Ɛ
 
     # using LinearAlgebra
     using StaticArrays
@@ -139,6 +140,7 @@ function doTest()
 @testset "Examples" begin
 
     @test 1+1==2  # canary
+    @test Ɛ > 0
     @test wrap(0.3,0,1) ≈ 0.3
     @test wrap(1.5,0,1) ≈ 0.5
     @test wrap(-0.5,0,1) ≈ 0.5
