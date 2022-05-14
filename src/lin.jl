@@ -154,11 +154,6 @@ function doTest()
     @test ratio_to_intverall(0.3,0,10)≈3 
     
     @test interval_to_ratio(3, 0, 10)≈0.3
-
-    @test angle_to_axis(Vec2(0., 1.))  ≈ 0
-    @test angle_to_axis(Vec2(1., 0.))  ≈ pi/2
-    @test angle_to_axis(Vec2(0., -1.)) ≈ pi
-    @test angle_to_axis(Vec2(-1., 0.))  ≈ -pi/2
     
     # test Vec2: constructor, similarity and tolerance
     @test Vec2(0.01,0.01) ≈ Vec2(0.,0.) atol=0.02
@@ -170,6 +165,11 @@ function doTest()
     @test sin.(Vec2(pi,pi))  ≈ Vec2(0,0) atol=1e-15
     @test sin.(0.5*Vec2(pi,pi))  ≈ Vec2(1,1) atol=1e-15
 
+
+    @test angle_to_axis(Vec2(0., 1.))  ≈ 0
+    @test angle_to_axis(Vec2(1., 0.))  ≈ pi/2
+    @test angle_to_axis(Vec2(0., -1.)) ≈ pi
+    @test angle_to_axis(Vec2(-1., 0.))  ≈ -pi/2
 
     # full circle is 2pi, and it increases counter clockwise
     @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
