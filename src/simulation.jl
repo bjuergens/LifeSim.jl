@@ -116,48 +116,53 @@ module LSSimulation
 
         return agent_list_individually
     end
-    
 
-    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::Ref{ControlState}, hotloading=true)
+    "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
+    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+
+        agentList = update_agents(simState, ctrlState)
+
+        last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
+        time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
+        if time_to_wait_s > 0
+            # sleep is efficient but inacurate 
+            # https://discourse.julialang.org/t/accuracy-of-sleep/5546
+            sleep(time_to_wait_s)
+        end
+
+        lock(lk_sim)
+        try
+            simState_transfer[].last_step=Ref(simState)
+        finally
+            unlock(lk_sim)
+        end
+        return SimulationStep(simState.num_step + 1, agentList, last_frame_time_ms)
+    end
+
+
+    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState_transfer::Ref{ControlState}, hotloading=true)
         @info "simulationLoop!..."
 
+        ctrlState = ctrlState_transfer[]
         simState = simState_transfer[].last_step[]
         last_time_ns = Base.time_ns()
-        last_request_revise= ctrlState[].request_revise
-        while !ctrlState[].is_stop
-            
-            if last_request_revise != ctrlState[].request_revise
-                if last_request_revise > ctrlState[].request_revise
-                    @warn "unexpected request from the future" last_request_revise > ctrlState[].request_revise
+        last_request_revise= ctrlState.request_revise
+        while !ctrlState.is_stop
+            # some things must be handled outside doSimulationStep and thus can not be hot-reloaded
+            # these are: handle the reload and passing data between iterations.  
+            if last_request_revise != ctrlState.request_revise
+                if last_request_revise > ctrlState.request_revise
+                    @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
                 end
                 @info "revise request received"
-                last_request_revise = ctrlState[].request_revise
+                last_request_revise = ctrlState.request_revise
                 revise()
             end
-
-            agentList = hotloading ? Base.invokelatest(update_agents,simState, ctrlState[]) : update_agents(simState, ctrlState[])
-
-             
-
-            last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
-            time_to_wait_s = (ctrlState[].min_frametime_ms - last_frame_time_ms) / 1000
-            if time_to_wait_s > 0
-                # sleep is efficient but inacurate 
-                # https://discourse.julialang.org/t/accuracy-of-sleep/5546
-                sleep(time_to_wait_s)
-            end
-
-            lock(lk_sim)
-            try
-                simState_transfer[].last_step=Ref(simState)
-            finally
-                unlock(lk_sim)
-            end
-            simState = SimulationStep(simState.num_step + 1, agentList, last_frame_time_ms)
+            simState = hotloading ? Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState) : doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
 
             last_time_ns = Base.time_ns()
+            ctrlState = ctrlState_transfer[]
         end
-    
         @info "simulationLoop!... done"
     end
 end
@@ -176,7 +181,7 @@ function run_headless(max_time)
         sleep(max_time) 
         test_ctrlState.is_stop = true
     end
-    simulationLoop!(Ref(test_simState), Ref(test_ctrlState))
+    simulationLoop!(Ref(test_simState), Ref(test_ctrlState), false)
     wait(ctrlThread)
     return test_simState.last_step[].num_step
 end
