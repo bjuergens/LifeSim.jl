@@ -5,7 +5,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSSimulation
-    export simulationLoop!, lk_sim, lk_ctrl, collision
+    export simulationLoop!, lk_sim, lk_ctrl
 
     using ..LSModels
     using ..LSLin
@@ -138,7 +138,7 @@ function test_collision(pos1, pos2, size1, size2)
     tAgent1.size = size1
     tAgent2.size = size2
     pre_dist = distance(tAgent1.pos, tAgent2.pos)
-    collision(tAgent1, tAgent2)
+    LSSimulation.collision(tAgent1, tAgent2)
 
     # since since their distance was smaller than their sumed sized, they did move
     @test distance(tAgent1.pos, tAgent2.pos) > pre_dist
