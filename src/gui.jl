@@ -30,7 +30,7 @@ module LSGui
             canvas_size.x * aAgent.size, 
             aAgent.color, 
             12)
-        
+        # todo: use LSLin here
         agent_move = Vec2( aAgent.pos.x + cos(aAgent.direction_angle) * aAgent.size,
                            aAgent.pos.y + sin(aAgent.direction_angle) * aAgent.size)
         agent_move_ort = Vec2( cos(pi/2+aAgent.direction_angle) * (aAgent.size/3),
