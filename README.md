@@ -11,7 +11,7 @@ julia -e "using LifeSim; main()"
 
 Now you can hot-reload the repo by clicking the "revise"-button in the gui. 
 
-Note: hot-reloading only works when starting as a module
+Note: hot-reloading only works when starting as a module. Also not all parts of the code can be hot-reloaded. 
 
 
 # dev notes
