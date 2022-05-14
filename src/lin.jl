@@ -97,7 +97,7 @@ module LSLin
 
     "return angle between 2 points, where x-axis is 0 and y-axis is pi/2"
     function direction(p1::Vec2, p2::Vec2)
-        return angle_to_y_axis(p2-p1)
+        return angle_to_axis(p2-p1)
     end
 
     "move point1 in the direction by distance"
@@ -174,25 +174,27 @@ function doTest()
     @test sin.(Vec2(pi,pi))  ≈ Vec2(0,0) atol=1e-15
     @test sin.(0.5*Vec2(pi,pi))  ≈ Vec2(1,1) atol=1e-15
 
-    @test angle_to_axis(Vec2(0., 1.))  ≈ pi/2
+    # full circle is 2pi, and it start at x-axis and increases counter clockwise
     @test angle_to_axis(Vec2(1., 0.))  ≈ 0
-    @test angle_to_axis(Vec2(0., -1.)) ≈ -pi/2
+    @test angle_to_axis(Vec2(0., 1.))  ≈ pi/2
     @test angle_to_axis(Vec2(-1., 0.)) ≈ pi
+    @test angle_to_axis(Vec2(0., -1.)) ≈ -pi/2
 
-    # full circle is 2pi, and it increases counter clockwise
-    @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
-    @test direction(Vec2(12,3), Vec2(13,3)) ≈ pi/2
+    # direction from point that is right/left of another point
+    @test direction(Vec2(0,0), Vec2(1,0))   ≈ 0
+    @test direction(Vec2(12,3), Vec2(13,3)) ≈ 0
+    @test direction(Vec2(1,0), Vec2(0,0))   ≈ pi
+    @test direction(Vec2(13,3), Vec2(12,3)) ≈ pi
     # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
 
     CENTER = Vec2(0.5, 0.5)
     pos =Vec2(0.6, 0.5)
-    @test direction(pos, CENTER) ≈ pi broken=true
-    @test direction(Vec2(0.5,0.6), Vec2(0.5,0.5)) ≈ pi
+    @test direction(pos, CENTER) ≈ pi
+    @test direction(Vec2(0.6,0.5), Vec2(0.5,0.5)) ≈ pi
 
     # value in opposite directions should be inverse of each other (within 2pi)
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi
-    @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi  - 2pi
+    @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi  - 2pi
     @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
 
     # move along axes
@@ -241,8 +243,8 @@ function doTest()
     @test distance(Vec2(-11,0)) ≈ 11
     @test distance(Vec2(-11,11)) ≈ sqrt(2*11*11)
 
-    # move one point in the direction of another point by their distance, then the should end up on the same spot
-    @test move_in_direction(Vec2(0.0,0.0), angle_to_y_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
+    # move one point in the direction of another point by their distance, then they should end up on the same spot
+    @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001 
     p1 = Vec2(12,23)
     p2 = Vec2(34,45)
     @test move_in_direction(p1, direction(p1,p2), distance(p1,p2)) ≈ p2 
