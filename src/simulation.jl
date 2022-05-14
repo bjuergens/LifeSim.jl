@@ -22,14 +22,11 @@ module LSSimulation
     COL_COLLISION = IM_COL32(255,255,40,255)
 
     function collision(agent1::Agent, agent2::Agent)
-        # todo: use LSLin for this
-        d_x = agent1.pos.x - agent2.pos.x
-        d_y = agent1.pos.y - agent2.pos.y
-        d_length = sqrt(d_x*d_x+d_y*d_y)
-        move_dist =  (agent1.size + agent2.size - d_length) / 2
-        norm_direction = (d_x/d_length,d_y/d_length) 
-        move_vec = Vec2(move_dist*norm_direction[1],
-                        move_dist*norm_direction[2])
+        move_dist =  (agent1.size + agent2.size - distance(agent1.pos - agent2.pos)) / 2
+        if move_dist<0
+            @warn "negative move dist -> unexpected results" move_dist
+        end
+        move_vec = stretch_to_length(agent1.pos - agent2.pos, move_dist)
         ratio = (agent1.size^2) / (agent2.size^2)
         agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
                           agent1.pos.y + (move_vec.y / ratio))

@@ -1,11 +1,9 @@
 
 
 module LSLin
-    export Vec2DTest
     export Vec2
     export wrap, clip, ratio_to_intverall, interval_to_ratio
-    export angle_to_axis, move_in_direction, direction, distance
-    export direction
+    export angle_to_axis, move_in_direction, direction, distance, stretch_to_length
 
     # using LinearAlgebra
     using StaticArrays
@@ -102,9 +100,17 @@ module LSLin
     function distance(p1::Vec2, p2::Vec2)
         return dist_euclid((p1.x,p1.y), (p2.x,p2.y))
     end
+
     "Euclidean distance from point to origin"
     function distance(p1::Vec2)
         return dist_euclid((p1.x,p1.y), Vec2(0,0))
+    end
+
+    "stretches a vector so its norm becomes target_length"
+    function stretch_to_length(p::Vec2, target_length::Number)
+        old_length = distance(p)
+        ratio = target_length/old_length
+        return p*ratio
     end
 
 end #module 
@@ -224,6 +230,20 @@ function doTest()
     p1 = Vec2(12,23)
     p2 = Vec2(34,45)
     @test move_in_direction(p1, direction(p1,p2), distance(p1,p2)) ≈ p2 
+
+    # stretch along axis
+    @test stretch_to_length(Vec2( 1, 0), 5) ≈ Vec2(5,0)
+    @test stretch_to_length(Vec2( 0, 1), 5) ≈ Vec2(0,5)
+    @test stretch_to_length(Vec2( -1, 0), 5) ≈ Vec2(-5,0)
+    @test stretch_to_length(Vec2( 0, -1), 5) ≈ Vec2(0,-5)
+    @test stretch_to_length(Vec2( 1, 1), distance(Vec2(5,5))) ≈ Vec2(5,5)
+    @test stretch_to_length(Vec2(-1,-1), distance(Vec2(5,5))) ≈ Vec2(-5,-5)
+
+    # move in negativ direction
+    @test stretch_to_length(Vec2( 1, 1), -distance(Vec2(5,5))) ≈ Vec2(-5,-5)
+
+    # stretching to anything and then stretching to original length will recreate the original input
+    @test stretch_to_length(stretch_to_length(Vec2(-3,4), 5), distance(Vec2(-3,4))) ≈ Vec2(-3,4)
 
     function myStackOverflowError()
         # https://github.com/JuliaArrays/StaticArrays.jl/issues/1026
