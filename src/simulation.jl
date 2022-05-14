@@ -41,11 +41,11 @@ module LSSimulation
 
     function makeSensorInput(aAgent)
        
-        # direction-angle points east
+        # direction-angle points east because that's where the x-axis is
         compass_north = aAgent.direction_angle + pi/2
         
         abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
-        compass_center =  abs_direction_to_center + aAgent.direction_angle
+        compass_center =  abs_direction_to_center - aAgent.direction_angle
 
         # @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
         return SensorInput(compass_north, compass_center)
@@ -203,6 +203,12 @@ function doTest()
         
         # agent is right off center with orientation along x-axis, then the center should be exactly behind it
         @test applyMakeSensor( c + Vec2(0.1,0.0), 0).compass_center ≈ pi
+        # center is right in front of agent
+        @test applyMakeSensor( c + Vec2(-0.1,0.0), 0).compass_center ≈ 0
+        # center is to the left
+        @test applyMakeSensor( c + Vec2(0.0,-0.1), 0).compass_center ≈ pi/2
+        # center is to the right
+        @test applyMakeSensor( c + Vec2(0.0,0.1), 0).compass_center ≈ -pi/2
         # @test applyMakeSensor(Vec2(0.2,0.2), 0) ≈ LSSimulation.SensorInput(pi/2, pi/4)
     end 
 end
