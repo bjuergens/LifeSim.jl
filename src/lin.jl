@@ -170,6 +170,18 @@ function doTest()
     @test sin.(Vec2(pi,pi))  ≈ Vec2(0,0) atol=1e-15
     @test sin.(0.5*Vec2(pi,pi))  ≈ Vec2(1,1) atol=1e-15
 
+
+    # full circle is 2pi, and it increases counter clockwise
+    @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
+    @test direction(Vec2(12,3), Vec2(13,3)) ≈ pi/2
+    # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
+
+    # value in opposite directions should be inverse of each other (within 2pi)
+    @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi
+    @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi
+    @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
+    
     # move along axes
     @test move_in_direction(xAxis, pi/2, 1.) ≈ Vec2(1.,1.) 
     @test move_in_direction(xAxis, pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
@@ -215,17 +227,6 @@ function doTest()
     @test distance(Vec2(0,0)) ≈ 0
     @test distance(Vec2(-11,0)) ≈ 11
     @test distance(Vec2(-11,11)) ≈ sqrt(2*11*11)
-
-    # full circle is 2pi, and it increases counter clockwise
-    @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
-    @test direction(Vec2(12,3), Vec2(13,3)) ≈ pi/2
-    # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
-
-    # value in opposite directions should be inverse of each other (within 2pi)
-    @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi
-    @test direction(Vec2(1,1), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(1,1) ) + pi
-    @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
 
     # move one point in the direction of another point by their distance, then the should end up on the same spot
     @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
