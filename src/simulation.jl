@@ -119,9 +119,12 @@ module LSSimulation
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
     function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
-
+        # first part: update actual state
         agentList = update_agents(simState, ctrlState)
 
+
+        # second part: perform meta-tasks around simulation step
+        
         last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
         time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
         if time_to_wait_s > 0
@@ -158,7 +161,11 @@ module LSSimulation
                 last_request_revise = ctrlState.request_revise
                 revise()
             end
-            simState = hotloading ? Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState) : doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+            if hotloading
+                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+            else
+                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+            end
 
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
