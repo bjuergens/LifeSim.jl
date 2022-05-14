@@ -8,5 +8,7 @@ Pkg.add("Combinatorics")
 Pkg.add("Test") 
 Pkg.add("SafeTestsets") 
 
-Pkg.add("StaticArrays")  # maybe
+Pkg.add("StaticArrays")  
+
+Pkg.add("Revise") # maybe
 
