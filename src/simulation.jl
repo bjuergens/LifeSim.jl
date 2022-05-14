@@ -21,17 +21,16 @@ module LSSimulation
     COL_ACTIV = IM_COL32(255,50,40,255)
     COL_COLLISION = IM_COL32(255,255,40,255)
 
+    "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
         move_dist =  (agent1.size + agent2.size - distance(agent1.pos - agent2.pos)) / 2
-        if move_dist<0
+        if move_dist < Ɛ
             @warn "negative move dist -> unexpected results" move_dist
         end
         move_vec = stretch_to_length(agent1.pos - agent2.pos, move_dist)
         ratio = (agent1.size^2) / (agent2.size^2)
-        agent1.pos = Vec2(agent1.pos.x + (move_vec.x / ratio), 
-                          agent1.pos.y + (move_vec.y / ratio))
-        agent2.pos = Vec2(agent2.pos.x - (move_vec.x * ratio),
-                          agent2.pos.y - (move_vec.y * ratio))
+        agent1.pos = agent1.pos + (move_vec / ratio)
+        agent2.pos = agent2.pos - (move_vec * ratio)
     end
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
