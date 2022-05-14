@@ -55,7 +55,7 @@ module MyMain
         ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 
         @info "starting render loop..."
-        t_render, _ = start_render_loop!(ctrlState, ref_sim_state_to_gui)
+        t_render, _ = start_render_loop!(ctrlState, ref_sim_state_to_gui, true)
         @info "starting dummy update loop..."
 
 

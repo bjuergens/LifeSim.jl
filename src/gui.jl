@@ -114,11 +114,11 @@ module LSGui
         CImGui.End()
     end
 
-    function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState})
+    function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState}, hotreload=false)
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
         GC.@preserve window ctx begin
-                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), false)
+                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), hotreload)
         end
         return t, window
     end
