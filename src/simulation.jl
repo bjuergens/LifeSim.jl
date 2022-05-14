@@ -22,6 +22,8 @@ module LSSimulation
     COL_COLLISION = IM_COL32(255,255,40,255)
     WORLD_CENTER = Vec2(0.5,0.5)
 
+    MAX_ROTATE = 0.05 # max rotation in rad per timestep
+
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
         move_dist =  (agent1.size + agent2.size - distance(agent1.pos - agent2.pos)) / 2
@@ -68,13 +70,11 @@ module LSSimulation
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
             agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
             
+            sensor = makeSensorInput(agent)
+            desire = agent_think(sensor)
 
-            if agent.id == 2
-                a_direction_angle = agent.direction_angle + 0.05
-            else
-                a_direction_angle = agent.direction_angle - 0.05
-            end 
-            a_direction_angle = wrap(a_direction_angle, -pi, 2pi)            
+            rotation =  + desire.rotate * MAX_ROTATE          
+            a_direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
 
             push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
         end
@@ -144,7 +144,7 @@ using ..LSSimulation
 using ..LSModelExamples
 using ..LSLin
 
-function run_headless(max_time = .5)
+function run_headless(max_time)
     test_ctrlState = deepcopy(ctrlState)
     test_simState = deepcopy(simState)
     ctrlThread = Threads.@spawn begin
@@ -193,7 +193,7 @@ end
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        @test run_headless() > 5
+        @test run_headless(0.7) > 5
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)
