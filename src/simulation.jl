@@ -7,6 +7,7 @@ end
 module LSSimulation
     export simulationLoop!, lk_sim, lk_ctrl
 
+    using Revise
     using ..LSModels
     using ..LSLin
 
@@ -115,15 +116,28 @@ module LSSimulation
 
         return agent_list_individually
     end
+    
 
-    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::Ref{ControlState})
+    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::Ref{ControlState}, hotloading=true)
         @info "simulationLoop!..."
 
         simState = simState_transfer[].last_step[]
         last_time_ns = Base.time_ns()
+        last_request_revise= ctrlState[].request_revise
         while !ctrlState[].is_stop
             
-            agentList = update_agents(simState, ctrlState[])
+            if last_request_revise != ctrlState[].request_revise
+                if last_request_revise > ctrlState[].request_revise
+                    @warn "unexpected request from the future" last_request_revise > ctrlState[].request_revise
+                end
+                @info "revise request received"
+                last_request_revise = ctrlState[].request_revise
+                revise()
+            end
+
+            agentList = hotloading ? Base.invokelatest(update_agents,simState, ctrlState[]) : update_agents(simState, ctrlState[])
+
+             
 
             last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
             time_to_wait_s = (ctrlState[].min_frametime_ms - last_frame_time_ms) / 1000
@@ -204,7 +218,7 @@ end
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        @test run_headless(0.7) > 5
+        @test run_headless(0.9) > 5
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)

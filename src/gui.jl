@@ -117,6 +117,7 @@ module LSGui
             CImGui.Button("REVISE") && begin 
                 @info "revise..."
                 revise()
+                controlState[].request_revise += 1
                 @info "revise... done"
             end
             CImGui.Separator()

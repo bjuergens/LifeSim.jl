@@ -37,7 +37,7 @@ mutable struct ControlState
     is_stop::Bool
     afloat::Cfloat
     min_frametime_ms::Cfloat
-    request_simulation_state_at_age::Int
+    request_revise::Int
 end
 end #module LSModels
 
