@@ -14,3 +14,7 @@ Now you can hot-reload the repo by clicking the "revise"-button in the gui.
 
 # dev notes
 
+every src-file contains a main module and a test module. The latter is executed when running the sourcefile as a script. 
+
+The general workflow is to start the main loop from the module. Then modifying a sourcefile, then running the sourcefile directly (ctrl+f5 in vscode) to see if the tests still pass and at last clicking the revise-button to hot-reload into the running window. 
+
