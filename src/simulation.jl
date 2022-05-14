@@ -47,7 +47,7 @@ module LSSimulation
         abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
         compass_center =  abs_direction_to_center + aAgent.direction_angle
 
-        @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
+        # @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
         return SensorInput(compass_north, compass_center)
     end
 
@@ -181,7 +181,7 @@ function test_collision(pos1, pos2, size1, size2)
     @test distance(tAgent1.pos, pos1) > 0.01
 
     # both got move in exact opposite directions
-    @test direction(tAgent1.pos, pos1) ≈ direction(tAgent2.pos, pos2) - pi
+    @test direction(tAgent1.pos, pos1) ≈ direction(tAgent2.pos, pos2) + pi
 
     # because size is equal, both got moved by same amount
     @test distance(tAgent1.pos, pos1) ≈ distance(tAgent2.pos, pos2) 
@@ -202,7 +202,7 @@ function doTest()
         @test applyMakeSensor(c, 0).compass_north ≈ pi/2
         
         # agent is right off center with orientation along x-axis, then the center should be exactly behind it
-        @test applyMakeSensor( c + Vec2(0.1,0.0), 0).compass_center ≈ pi broken=true
+        @test applyMakeSensor( c + Vec2(0.1,0.0), 0).compass_center ≈ pi
         # @test applyMakeSensor(Vec2(0.2,0.2), 0) ≈ LSSimulation.SensorInput(pi/2, pi/4)
     end 
 end
