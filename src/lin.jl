@@ -102,8 +102,8 @@ module LSLin
 
     "move point1 in the direction by distance"
     function move_in_direction(p::Vec2, direction::Number, distance::Number)
-        return Vec2( p.x + sin(direction) * distance,
-                     p.y + cos(direction) * distance)
+        return Vec2( p.x + cos(direction) * distance,
+                     p.y + sin(direction) * distance)
     end
 
     "Euclidean distance between two points"
@@ -198,32 +198,32 @@ function doTest()
     @test direction(Vec2(123,213), Vec2(456,567)) ≈ direction(Vec2(456,567),Vec2(123,213) ) + pi
 
     # move along axes
-    @test move_in_direction(Vec2(0., 1.), pi/2, 1.) ≈ Vec2(1.,1.) 
-    @test move_in_direction(Vec2(0., 1.), pi, 1.) ≈ Vec2(0.,0.) atol=0.00001
+    @test move_in_direction(Vec2(1., 0.), pi/2, 1.) ≈ Vec2(1.,1.)
+    @test move_in_direction(Vec2(1., 0.), pi  , 1.) ≈ Vec2(0.,0.) atol=Ɛ
 
     # move 90° from origin
-    @test move_in_direction(Vec2(0,0), 0.5pi, 1.) ≈ Vec2(1.,0.) 
-    @test move_in_direction(Vec2(0,0), 1.0pi, 1.) ≈ Vec2(0.,-1.)
-    @test move_in_direction(Vec2(0,0), 1.5pi, 1.) ≈ Vec2(-1.,0.)
-    @test move_in_direction(Vec2(0,0), 2.0pi, 1.) ≈ Vec2(0.,1.)
+    @test move_in_direction(Vec2(0,0), 0.5pi, 1.) ≈ Vec2( 0., 1.)
+    @test move_in_direction(Vec2(0,0), 1.0pi, 1.) ≈ Vec2(-1., 0.)
+    @test move_in_direction(Vec2(0,0), 1.5pi, 1.) ≈ Vec2( 0.,-1.)
+    @test move_in_direction(Vec2(0,0), 2.0pi, 1.) ≈ Vec2( 1., 0.)
     # different notation
-    @test move_in_direction(Vec2(0,0), pi/2, 1.) ≈ Vec2(1.,0.) 
-    @test move_in_direction(Vec2(0,0), 3pi/2, 1.) ≈ Vec2(-1.,0.)
+    @test move_in_direction(Vec2(0,0), pi/2, 1.) ≈ Vec2(0.,1.)
+    @test move_in_direction(Vec2(0,0), 3pi/2, 1.) ≈ Vec2(0., -1.)
     
     # move 45˚ on unit grid
-    @test move_in_direction(Vec2(3,3), pi/4, sqrt(2)) ≈ Vec2(4.,4.) 
-    @test move_in_direction(Vec2(3,3), -pi/4, sqrt(2)) ≈ Vec2(2.,4.) 
-    @test move_in_direction(Vec2(3,3), 3pi/4, sqrt(2)) ≈ Vec2(4.,2.) 
-    @test move_in_direction(Vec2(3,3), -3pi/4, sqrt(2)) ≈ Vec2(2.,2.) 
+    @test move_in_direction(Vec2(3,3),   pi/4, sqrt(2)) ≈ Vec2(4.,4.)
+    @test move_in_direction(Vec2(3,3),  -pi/4, sqrt(2)) ≈ Vec2(4.,2.)
+    @test move_in_direction(Vec2(3,3),  3pi/4, sqrt(2)) ≈ Vec2(2.,4.)
+    @test move_in_direction(Vec2(3,3), -3pi/4, sqrt(2)) ≈ Vec2(2.,2.)
 
     # should wrap around
     @test move_in_direction(Vec2(3,3), -3pi/4, sqrt(2)) ≈ move_in_direction(Vec2(3,3), -3pi/4 + 2pi, sqrt(2)) 
 
     # test some simple distance 
-    @test distance(Vec2(0,0), Vec2(1,0)) ≈ 1
-    @test distance(Vec2(0,0), Vec2(3,4)) ≈ 5
+    @test distance(Vec2(0,0),     Vec2(  1,  0)) ≈ 1
+    @test distance(Vec2(0,0),     Vec2(  3,  4)) ≈ 5
     @test distance(Vec2(-10,-10), Vec2(-13,-14)) ≈ 5
-    @test distance(Vec2(0,0), Vec2(-3,-4)) ≈ 5
+    @test distance(Vec2(0,0),     Vec2( -3, -4)) ≈ 5
 
     # rudimentary test on test-method
     @test distance_manual(Vec2(1,1), Vec2(1,2)) ≈ 1
@@ -232,15 +232,15 @@ function doTest()
     @test distance_manual(Vec2(0,0), Vec2(2,2)) ≈ sqrt(8)
 
     # compare fast euclidean from module with simple test-version
-    @test_distance Vec2(0,0) Vec2(1,0)
-    @test_distance Vec2(1,1) Vec2(1,0) 
-    @test_distance Vec2(-2,0) Vec2(2,0)
-    @test_distance Vec2(12,-23) Vec2(-34,45)   
+    @test_distance Vec2(  0,  0) Vec2(1,0)
+    @test_distance Vec2(  1,  1) Vec2(1,0) 
+    @test_distance Vec2( -2,  0) Vec2(2,0)
+    @test_distance Vec2( 12,-23) Vec2(-34,45)   
     @test_distance Vec2(-12,-23) Vec2(-34,-45)    
 
     # test for 1d distance
-    @test distance(Vec2(0,0)) ≈ 0
-    @test distance(Vec2(-11,0)) ≈ 11
+    @test distance(Vec2(  0, 0)) ≈ 0
+    @test distance(Vec2(-11, 0)) ≈ 11
     @test distance(Vec2(-11,11)) ≈ sqrt(2*11*11)
 
     # move one point in the direction of another point by their distance, then they should end up on the same spot
@@ -252,8 +252,8 @@ function doTest()
     # stretch along axis
     @test stretch_to_length(Vec2( 1, 0), 5) ≈ Vec2(5,0)
     @test stretch_to_length(Vec2( 0, 1), 5) ≈ Vec2(0,5)
-    @test stretch_to_length(Vec2( -1, 0), 5) ≈ Vec2(-5,0)
-    @test stretch_to_length(Vec2( 0, -1), 5) ≈ Vec2(0,-5)
+    @test stretch_to_length(Vec2(-1, 0), 5) ≈ Vec2(-5,0)
+    @test stretch_to_length(Vec2( 0,-1), 5) ≈ Vec2(0,-5)
     @test stretch_to_length(Vec2( 1, 1), distance(Vec2(5,5))) ≈ Vec2(5,5)
     @test stretch_to_length(Vec2(-1,-1), distance(Vec2(5,5))) ≈ Vec2(-5,-5)
 
