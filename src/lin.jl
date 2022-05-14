@@ -5,6 +5,7 @@ module LSLin
     export wrap, clip, ratio_to_intverall, interval_to_ratio
     export angle_to_axis, move_in_direction, direction, distance, stretch_to_length
     export Ɛ
+    export angle_to_y_axis
 
     # using LinearAlgebra
     using StaticArrays
@@ -77,18 +78,26 @@ module LSLin
         return res
     end
 
-    "return angle between vector and x-axis"
-    function angle_to_axis(p::Vec2)
+    "return angle between vector and y-axis"
+    function angle_to_y_axis(p::Vec2)
         if -Ɛ < p.x < Ɛ && -Ɛ < p.y < Ɛ
             @debug "input" p Ɛ
             @debug "atan not defined for 0 values" stacktrace()[3:end]
         end
         return atan(p.x,p.y)
     end
+    "return angle between vector and x-axis"
+    function angle_to_axis(p::Vec2)
+        if -Ɛ < p.x < Ɛ && -Ɛ < p.y < Ɛ
+            @debug "input" p Ɛ
+            @debug "atan not defined for 0 values" stacktrace()[3:end]
+        end
+        return atan(p.y,p.x)
+    end
 
     "return angle between 2 points, where x-axis is 0 and y-axis is pi/2"
     function direction(p1::Vec2, p2::Vec2)
-        return angle_to_axis(p2-p1)
+        return angle_to_y_axis(p2-p1)
     end
 
     "move point1 in the direction by distance"
@@ -165,17 +174,21 @@ function doTest()
     @test sin.(Vec2(pi,pi))  ≈ Vec2(0,0) atol=1e-15
     @test sin.(0.5*Vec2(pi,pi))  ≈ Vec2(1,1) atol=1e-15
 
-
-    @test angle_to_axis(Vec2(0., 1.))  ≈ 0
-    @test angle_to_axis(Vec2(1., 0.))  ≈ pi/2
-    @test angle_to_axis(Vec2(0., -1.)) ≈ pi
-    @test angle_to_axis(Vec2(-1., 0.))  ≈ -pi/2
+    @test angle_to_axis(Vec2(0., 1.))  ≈ pi/2
+    @test angle_to_axis(Vec2(1., 0.))  ≈ 0
+    @test angle_to_axis(Vec2(0., -1.)) ≈ -pi/2
+    @test angle_to_axis(Vec2(-1., 0.)) ≈ pi
 
     # full circle is 2pi, and it increases counter clockwise
     @test direction(Vec2(0,0), Vec2(1,0))   ≈ pi/2
     @test direction(Vec2(12,3), Vec2(13,3)) ≈ pi/2
     # @test direction(Vec2(0,0), Vec2(0,0)) ≈ 0 # skip because clutter on console
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ pi/2
+
+    CENTER = Vec2(0.5, 0.5)
+    pos =Vec2(0.6, 0.5)
+    @test direction(pos, CENTER) ≈ pi broken=true
+    @test direction(Vec2(0.5,0.6), Vec2(0.5,0.5)) ≈ pi
 
     # value in opposite directions should be inverse of each other (within 2pi)
     @test direction(Vec2(0,0), Vec2(1,0)) ≈ direction(Vec2(1,0), Vec2(0,0) ) + pi
@@ -229,7 +242,7 @@ function doTest()
     @test distance(Vec2(-11,11)) ≈ sqrt(2*11*11)
 
     # move one point in the direction of another point by their distance, then the should end up on the same spot
-    @test move_in_direction(Vec2(0.0,0.0), angle_to_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
+    @test move_in_direction(Vec2(0.0,0.0), angle_to_y_axis(Vec2(3.0,4.0)), 5.0)  ≈ Vec2(3.0,4.0) atol=0.00001
     p1 = Vec2(12,23)
     p2 = Vec2(34,45)
     @test move_in_direction(p1, direction(p1,p2), distance(p1,p2)) ≈ p2 
