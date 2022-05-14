@@ -31,10 +31,10 @@ module LSGui
             aAgent.color, 
             12)
         
-        agent_move = Vec2( aAgent.pos.x + sin(aAgent.direction_angle) * aAgent.size,
-                           aAgent.pos.y + cos(aAgent.direction_angle) * aAgent.size)
-        agent_move_ort = Vec2( sin(pi/2+aAgent.direction_angle) * (aAgent.size/3),
-                               cos(pi/2+aAgent.direction_angle) * (aAgent.size/3))
+        agent_move = Vec2( aAgent.pos.x + cos(aAgent.direction_angle) * aAgent.size,
+                           aAgent.pos.y + sin(aAgent.direction_angle) * aAgent.size)
+        agent_move_ort = Vec2( cos(pi/2+aAgent.direction_angle) * (aAgent.size/3),
+                               sin(pi/2+aAgent.direction_angle) * (aAgent.size/3))
         agent_move_ort1 = Vec2( convert(Cfloat, aAgent.pos.x + agent_move_ort.x),
                                 convert(Cfloat, aAgent.pos.y + agent_move_ort.y))
         agent_move_ort2 = Vec2(convert(Cfloat, aAgent.pos.x - agent_move_ort.x),
