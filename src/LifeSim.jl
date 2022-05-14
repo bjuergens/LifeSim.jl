@@ -1,7 +1,7 @@
 
+using Revise
 
-
-module MyMain
+module LifeSim
 
     export main
 
@@ -10,7 +10,7 @@ module MyMain
     include("gui.jl")
     include("simulation.jl")
     
-
+    # using StaticArrays
     using .LSModels
     using .LSGui
     using .LSSimulation
@@ -45,7 +45,7 @@ module MyMain
         end
     end
 
-
+    
     function main()
 
         # todo: safe copy controlstate to worker in the same safe way as the other way
@@ -67,9 +67,9 @@ module MyMain
 
         @info "Threads " Threads.nthreads() Threads.threadid()
 
-        !isinteractive() && wait(t_render)
+        wait(t_render)
         ctrlState.is_stop = true
-        !isinteractive() && wait(t_update)
+        wait(t_update)
         ctrlState.is_stop = true
         wait(workThread)
 
@@ -80,6 +80,7 @@ module MyMain
 end
 
 
-using .MyMain
-
-main()
+if abspath(PROGRAM_FILE) == @__FILE__
+    using .LifeSim
+    main()
+end

@@ -7,6 +7,7 @@ end
 
 module LSGui
     export start_render_loop!
+    using Revise
     using CImGui
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
     @show render_source
@@ -50,7 +51,7 @@ module LSGui
         CImGui.AddCircleFilled(draw_list, 
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size), 
             canvas_size.x * aAgent.size / 10, 
-            IM_COL32(255, 0,0 , 255), 
+            IM_COL32(255, 0 ,0 , 255), 
             12)
        
     end
@@ -111,6 +112,14 @@ module LSGui
                 controlState.is_stop = !is_connected[]
             end
             CImGui.PlotLines("sine wave", controlState.arr, length(controlState.arr))
+
+            CImGui.Separator()
+            CImGui.Button("REVISE") && begin 
+                @info "revise..."
+                revise()
+                @info "revise... done"
+            end
+            CImGui.Separator()
         CImGui.End()
     end
 
@@ -151,12 +160,13 @@ end #module GuiTests
 
     
 if abspath(PROGRAM_FILE) == @__FILE__
+    
     using .LSGui
     using .LSModels
     using .LSModelExamples
     using .GuiTests
     doTest()
-    
+
     keep_open = false
     if keep_open
         t_render, _ = start_render_loop!(ctrlState, Ref(simState))

@@ -148,7 +148,7 @@ module LSSimulation
     end
 end
 
-module LinTests
+module SimTests
 export doTest
 using Test
 using ..LSSimulation
@@ -226,7 +226,7 @@ end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .LinTests
+    using .SimTests
     using .LSModelExamples
     using .LSSimulation
     doTest()
