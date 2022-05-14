@@ -41,9 +41,9 @@ module LifeSim
                          sim_state_to_gui::Ref{SimulationState}, sim_state_from_sim::Ref{SimulationState})
         ctrl_state_from_gui[].is_stop = false
         @async while true
-            ctrl_state_from_gui[].is_stop && break
             update_from_sim!(sim_state_to_gui, sim_state_from_sim)
             update_from_gui!(ctrl_state_to_sim, ctrl_state_from_gui)
+            ctrl_state_from_gui[].is_stop && break
             yield()
         end
     end
