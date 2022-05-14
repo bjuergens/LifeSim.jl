@@ -62,7 +62,7 @@ module LSGui
 
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
-    function ui(controlState::ControlState, simState::Ref{SimulationState})
+    function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState})
         CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
         CImGui.Begin("SimulationView")
             draw_list = CImGui.GetWindowDrawList()
@@ -94,24 +94,24 @@ module LSGui
             CImGui.Separator()
             CImGui.Text(string("Frametime: ", simState[].last_step[].last_frame_time_ms, "ms"))
             
-            min_frametime_ms = Ref(controlState.min_frametime_ms)
+            min_frametime_ms = Ref(controlState[].min_frametime_ms)
             CImGui.SliderFloat("min_frame_time", min_frametime_ms, 0.0, 100.0, "time = %.3f ms")
-            controlState.min_frametime_ms = min_frametime_ms[]
+            controlState[].min_frametime_ms = min_frametime_ms[]
 
         CImGui.End()
 
         CImGui.SetNextWindowSize((300, 400), CImGui.ImGuiCond_Once)
         CImGui.Begin("OptionsWindow")
         
-            is_connected = Ref(controlState.is_stop)
-            float_ref = Ref(controlState.afloat)
+            is_connected = Ref(controlState[].is_stop)
+            float_ref = Ref(controlState[].afloat)
             CImGui.SliderFloat("slider float", float_ref, 0.0, 2.0, "ratio = %.3f")
-            controlState.afloat = float_ref[]
+            controlState[].afloat = float_ref[]
 
             if CImGui.Checkbox("connected?", is_connected)
-                controlState.is_stop = !is_connected[]
+                controlState[].is_stop = !is_connected[]
             end
-            CImGui.PlotLines("sine wave", controlState.arr, length(controlState.arr))
+            CImGui.PlotLines("sine wave", controlState[].arr, length(controlState[].arr))
 
             CImGui.Separator()
             CImGui.Button("REVISE") && begin 
@@ -123,7 +123,7 @@ module LSGui
         CImGui.End()
     end
 
-    function start_render_loop!(ctrlState::ControlState, simState::Ref{SimulationState}, hotreload=false)
+    function start_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false)
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
         GC.@preserve window ctx begin
@@ -138,16 +138,16 @@ end
 module GuiTests
 # Testing-module is needed as workaround for error "ERROR: LoadError: UndefVarError: @safetestset not defined"
 # when macro is called in toplevel-block that is not a module.
-using SafeTestsets
+using Test
+using ..LSGui
+using ..LSModelExamples
+using GLFW
 export doTest
 function doTest()
-@safetestset "Examples" begin
-    using ...LSGui
-    using ...LSModelExamples
-    using GLFW
+@testset "Examples" begin
     
     function render_win_for_half_second()
-        _, window = start_render_loop!(ctrlState, Ref(simState))
+        _, window = start_render_loop!(Ref(ctrlState), Ref(simState))
         sleep(0.5)
         GLFW.SetWindowShouldClose(window, true)
         return true

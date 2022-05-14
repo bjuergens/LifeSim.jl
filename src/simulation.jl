@@ -116,17 +116,17 @@ module LSSimulation
         return agent_list_individually
     end
 
-    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::ControlState)
+    function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState::Ref{ControlState})
         @info "simulationLoop!..."
 
         simState = simState_transfer[].last_step[]
         last_time_ns = Base.time_ns()
-        while !ctrlState.is_stop
+        while !ctrlState[].is_stop
             
-            agentList = update_agents(simState, ctrlState)
+            agentList = update_agents(simState, ctrlState[])
 
             last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
-            time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
+            time_to_wait_s = (ctrlState[].min_frametime_ms - last_frame_time_ms) / 1000
             if time_to_wait_s > 0
                 # sleep is efficient but inacurate 
                 # https://discourse.julialang.org/t/accuracy-of-sleep/5546
@@ -162,7 +162,7 @@ function run_headless(max_time)
         sleep(max_time) 
         test_ctrlState.is_stop = true
     end
-    simulationLoop!(Ref(test_simState), test_ctrlState)
+    simulationLoop!(Ref(test_simState), Ref(test_ctrlState))
     wait(ctrlThread)
     return test_simState.last_step[].num_step
 end
