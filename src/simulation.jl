@@ -22,7 +22,8 @@ module LSSimulation
     COL_COLLISION = IM_COL32(255,255,40,255)
     WORLD_CENTER = Vec2(0.5,0.5)
 
-    MAX_ROTATE = 0.05 # max rotation in rad per timestep
+    # MAX_ROTATE = 0.05 # max rotation in rad per timestep
+    MAX_ROTATE = 0.15 # max rotation in rad per timestep
 
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
@@ -46,11 +47,14 @@ module LSSimulation
         # direction-angle points east because that's where the x-axis is
         compass_north = aAgent.direction_angle + pi/2
         
+        
         abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
         compass_center =  abs_direction_to_center - aAgent.direction_angle
 
         # @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
-        return SensorInput(compass_north, compass_center)
+        return SensorInput(
+            wrap(compass_north,0, 2pi), 
+            wrap(compass_center,0, 2pi))
     end
 
     struct ActionIntention
@@ -58,7 +62,14 @@ module LSSimulation
     end
 
     function agent_think(input::SensorInput)
-        return ActionIntention(1.0)
+
+        # when center is to the left , move left
+        # when center is to the right, move right
+        if input.compass_center < pi
+            return ActionIntention(1.0)
+        else
+            return ActionIntention(-1.0)
+        end
     end
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
@@ -208,7 +219,7 @@ function doTest()
         # center is to the left
         @test applyMakeSensor( c + Vec2(0.0,-0.1), 0).compass_center ≈ pi/2
         # center is to the right
-        @test applyMakeSensor( c + Vec2(0.0,0.1), 0).compass_center ≈ -pi/2
+        @test applyMakeSensor( c + Vec2(0.0,0.1), 0).compass_center ≈ 3pi/2
         # @test applyMakeSensor(Vec2(0.2,0.2), 0) ≈ LSSimulation.SensorInput(pi/2, pi/4)
     end 
 end
