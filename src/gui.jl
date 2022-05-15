@@ -18,9 +18,13 @@ module LSGui
     using ..LSLin
     using CImGui: ImVec2, ImVec4, IM_COL32, ImU32
 
+    using CImGui.CSyntax.CStatic
+    using Printf
+
     "internal state of gui"
     mutable struct GuiState
         show_app_metrics::Bool
+        show_overlay_input::Ref{Bool}
     end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
@@ -61,7 +65,7 @@ module LSGui
        
     end
 
-    function windowSimulationView(controlState::Ref{ControlState}, simState::Ref{SimulationState})
+    function showWindowSimulationView(controlState::Ref{ControlState}, simState::Ref{SimulationState})
         CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
         CImGui.Begin("SimulationView")
             draw_list = CImGui.GetWindowDrawList()
@@ -100,8 +104,9 @@ module LSGui
         CImGui.End()
     end
 
-    function windowOptions!(guiState::Ref{GuiState}, controlState::Ref{ControlState})
+    function showWindowOptions!(guiState::Ref{GuiState}, controlState::Ref{ControlState})
         show_app_metrics = Ref(guiState[].show_app_metrics)
+        show_overlay_input = guiState[].show_overlay_input
         window_flags_options = CImGui.ImGuiWindowFlags(0)
         window_flags_options |= CImGui.ImGuiWindowFlags_MenuBar
         
@@ -112,6 +117,7 @@ module LSGui
             if CImGui.BeginMenuBar()
                 if CImGui.BeginMenu("Help")
                     CImGui.MenuItem("Metrics", C_NULL, show_app_metrics)
+                    CImGui.MenuItem("InputInfo", C_NULL, guiState[].show_overlay_input)
                     CImGui.EndMenu()
                 end
                 CImGui.EndMenuBar()
@@ -140,26 +146,73 @@ module LSGui
         guiState[].show_app_metrics = show_app_metrics[]
     end
 
-    function windowMetrics!(guiState::Ref{GuiState})
+    function showWindowMetrics!(guiState::Ref{GuiState})
         show_app_metrics = Ref(guiState[].show_app_metrics)
         show_app_metrics[] && CImGui.ShowMetricsWindow(show_app_metrics)
         guiState[].show_app_metrics = show_app_metrics[]
     end
+
+    function ShowOverlayInput!(p_open::Ref{Bool})
+        DISTANCE = Cfloat(10.0)
+
+        io = CImGui.GetIO()
+        @cstatic corner=Cint(0) begin
+            if corner != -1
+                window_pos_x = corner & 1 != 0 ? io.DisplaySize.x - DISTANCE : DISTANCE
+                window_pos_y = corner & 2 != 0 ? io.DisplaySize.y - DISTANCE : DISTANCE
+                window_pos = (window_pos_x, window_pos_y)
+                window_pos_pivot = (corner & 1 != 0 ? 1.0 : 0.0, corner & 2 != 0 ? 1.0 : 0.0)
+                CImGui.SetNextWindowPos(window_pos, CImGui.ImGuiCond_Always, window_pos_pivot)
+            end
+            CImGui.SetNextWindowBgAlpha(0.3) 
+            flag = CImGui.ImGuiWindowFlags_NoTitleBar | CImGui.ImGuiWindowFlags_NoResize |
+                CImGui.ImGuiWindowFlags_AlwaysAutoResize | CImGui.ImGuiWindowFlags_NoSavedSettings |
+                CImGui.ImGuiWindowFlags_NoFocusOnAppearing | CImGui.ImGuiWindowFlags_NoNav
+            flag |= corner != -1 ? CImGui.ImGuiWindowFlags_NoMove : CImGui.ImGuiWindowFlags_None
+            if CImGui.Begin("Input Overlay", p_open, flag)
+                if CImGui.IsMousePosValid()
+                    # for possible values see http://docs.ros.org/en/kinetic/api/lib
+                    CImGui.Text(@sprintf("Mouse Position: (%06.1f,%06.1f)", io.MousePos.x, io.MousePos.y))
+                    CImGui.Text(@sprintf("Mouse Delta   : (%06.1f,%06.1f)", io.MouseDelta.x, io.MouseDelta.y))
+                    CImGui.Separator()
+                    CImGui.Text(         "KeyCtrl       : " * ( io.KeyCtrl ? "true" : "false"))
+                    CImGui.Text(         "KeyShift      : " * ( io.KeyShift ? "true" : "false"))
+                    CImGui.Text(         "KeyAlt        : " * ( io.KeyAlt ? "true" : "false"))
+                    CImGui.Text(         "KeySuper      : " * ( io.KeySuper ? "true" : "false"))
+                else
+                    CImGui.Text("Mouse Position: <invalid>")
+                end
+                if CImGui.BeginPopupContextWindow()
+                    CImGui.MenuItem("Custom",       C_NULL, corner == -1) && (corner = -1;)
+                    CImGui.MenuItem("Top-left",     C_NULL, corner == 0) && (corner = 0;)
+                    CImGui.MenuItem("Top-right",    C_NULL, corner == 1) && (corner = 1;)
+                    CImGui.MenuItem("Bottom-left",  C_NULL, corner == 2) && (corner = 2;)
+                    CImGui.MenuItem("Bottom-right", C_NULL, corner == 3) && (corner = 3;)
+                    p_open[] && CImGui.MenuItem("Close") && (p_open[] = false;)
+                    CImGui.EndPopup()
+                end
+            end
+            CImGui.End()
+        end # @cstatic
+    end
+
 
 
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
     function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState})
 
-        windowSimulationView(controlState, simState)
-        windowOptions!(guiState, controlState)
-        windowMetrics!(guiState)
+        showWindowSimulationView(controlState, simState)
+        showWindowOptions!(guiState, controlState)
+        showWindowMetrics!(guiState)
+
+        guiState[].show_overlay_input[] && ShowOverlayInput!(guiState[].show_overlay_input)
     end
 
     function start_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false)
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
-        gui_state = Ref(GuiState(true))
+        gui_state = Ref(GuiState(true, Ref(true)))
         GC.@preserve window ctx begin
                 t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState, gui_state), hotreload)
         end
