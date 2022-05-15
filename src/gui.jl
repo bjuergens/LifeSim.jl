@@ -17,6 +17,10 @@ module LSGui
     using ..LSModels
     using ..LSLin
 
+    "internal state of gui"
+    mutable struct GuiState
+        show_app_metrics::Bool
+    end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
     function sim_to_pixel_point(sim_pos::Vec2, pixel_base::CImGui.LibCImGui.ImVec2, pixel_width::CImGui.LibCImGui.ImVec2)
@@ -62,7 +66,10 @@ module LSGui
 
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
-    function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState})
+    function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState})
+        # start by creating all relevant references to guiState that are used by multiple windows
+        show_app_metrics = Ref(guiState[].show_app_metrics)
+
         CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
         CImGui.Begin("SimulationView")
             draw_list = CImGui.GetWindowDrawList()
@@ -100,9 +107,21 @@ module LSGui
 
         CImGui.End()
 
-        CImGui.SetNextWindowSize((300, 400), CImGui.ImGuiCond_Once)
-        CImGui.Begin("OptionsWindow")
+        window_flags_options = CImGui.ImGuiWindowFlags(0)
+        window_flags_options |= CImGui.ImGuiWindowFlags_MenuBar
         
+        CImGui.SetNextWindowSize((300, 400), CImGui.ImGuiCond_Once)
+
+        CImGui.Begin("OptionsWindow", Ref(true), window_flags_options)
+            
+            if CImGui.BeginMenuBar()
+                if CImGui.BeginMenu("Help")
+                    CImGui.MenuItem("Metrics", C_NULL, show_app_metrics)
+                    CImGui.EndMenu()
+                end
+                CImGui.EndMenuBar()
+            end
+            
             is_connected = Ref(controlState[].is_stop)
             float_ref = Ref(controlState[].afloat)
             CImGui.SliderFloat("slider float", float_ref, 0.0, 2.0, "ratio = %.3f")
@@ -122,13 +141,19 @@ module LSGui
             end
             CImGui.Separator()
         CImGui.End()
+
+        show_app_metrics[] && CImGui.ShowMetricsWindow(show_app_metrics)
+
+        # collect values for refernzes for guistate used by mutliple windows
+        guiState[].show_app_metrics = show_app_metrics[]
     end
 
     function start_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false)
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
+        gui_state = Ref(GuiState(true))
         GC.@preserve window ctx begin
-                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState), hotreload)
+                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState, gui_state), hotreload)
         end
         return t, window
     end
