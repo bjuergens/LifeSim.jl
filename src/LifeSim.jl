@@ -48,6 +48,7 @@ module LifeSim
             update_from_gui!(ctrl_state_to_sim, ctrl_state_from_gui)
             ctrl_state_from_gui[].is_stop && break
             yield()
+            sleep(0.016)
         end
     end
 
