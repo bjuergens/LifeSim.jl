@@ -61,13 +61,7 @@ module LSGui
        
     end
 
-
-    # this is the UI function, whenever the structure of `MyStates` is changed, 
-    # the corresponding changes should be applied
-    function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState})
-        # start by creating all relevant references to guiState that are used by multiple windows
-        show_app_metrics = Ref(guiState[].show_app_metrics)
-
+    function windowSimulationView(controlState::Ref{ControlState}, simState::Ref{SimulationState})
         CImGui.SetNextWindowSize((400, 500), CImGui.ImGuiCond_Once)
         CImGui.Begin("SimulationView")
             draw_list = CImGui.GetWindowDrawList()
@@ -104,7 +98,10 @@ module LSGui
             controlState[].min_frametime_ms = min_frametime_ms[]
 
         CImGui.End()
+    end
 
+    function windowOptions!(guiState::Ref{GuiState}, controlState::Ref{ControlState})
+        show_app_metrics = Ref(guiState[].show_app_metrics)
         window_flags_options = CImGui.ImGuiWindowFlags(0)
         window_flags_options |= CImGui.ImGuiWindowFlags_MenuBar
         
@@ -140,10 +137,23 @@ module LSGui
             CImGui.Separator()
         CImGui.End()
 
-        show_app_metrics[] && CImGui.ShowMetricsWindow(show_app_metrics)
-
-        # collect values for refernzes for guistate used by mutliple windows
         guiState[].show_app_metrics = show_app_metrics[]
+    end
+
+    function windowMetrics!(guiState::Ref{GuiState})
+        show_app_metrics = Ref(guiState[].show_app_metrics)
+        show_app_metrics[] && CImGui.ShowMetricsWindow(show_app_metrics)
+        guiState[].show_app_metrics = show_app_metrics[]
+    end
+
+
+    # this is the UI function, whenever the structure of `MyStates` is changed, 
+    # the corresponding changes should be applied
+    function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState})
+
+        windowSimulationView(controlState, simState)
+        windowOptions!(guiState, controlState)
+        windowMetrics!(guiState)
     end
 
     function start_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false)
