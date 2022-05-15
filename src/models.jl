@@ -43,6 +43,7 @@ mutable struct ControlState
     request_revise::Int
     request_pause::Int
     request_play::Int
+    request_add_agent::Int
 end
 
 end #module LSModels
