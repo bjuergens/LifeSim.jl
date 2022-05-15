@@ -25,3 +25,4 @@ docs/site/
 Manifest.toml
 
 src/simulation.jl
+imgui.ini
