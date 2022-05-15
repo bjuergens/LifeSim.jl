@@ -16,6 +16,7 @@ module LSGui
     using .Renderer:renderloop
     using ..LSModels
     using ..LSLin
+    using CImGui: ImVec2, ImVec4, IM_COL32, ImU32
 
     "internal state of gui"
     mutable struct GuiState
@@ -60,9 +61,6 @@ module LSGui
        
     end
 
-    using CImGui: ImVec2, ImVec4, IM_COL32, ImU32
-
-    col=Cfloat[1.0,1.0,0.4,1.0]
 
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
