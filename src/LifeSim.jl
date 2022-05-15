@@ -51,8 +51,6 @@ module LifeSim
     
     function main()
 
-        # todo: safe copy controlstate to worker in the same safe way as the other way
-
         @info "running gui with some dummy-data for debugging..."
 
         ctrl_state_from_gui = ctrlState
