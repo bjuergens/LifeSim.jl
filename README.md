@@ -25,6 +25,9 @@ activate .
 add $packet
 resolve
 # git commit Project.toml
+# ggf noch (warum?)
+import Pkg
+Pkg.resolve()
 ```
 
 ## workflow

@@ -21,13 +21,15 @@ module LSGui
 
     using CImGui.CSyntax.CStatic
     using Printf
+    using Flatten
 
     "internal state of gui"
     mutable struct GuiState
         show_app_metrics::Ref{Bool}
         show_overlay_input::Ref{Bool}
-        GuiState(; show_app_metrics=true, show_overlay_input=true) = new(Ref(show_app_metrics), Ref(show_overlay_input))
-        GuiState(open_all) =  new(open_all, Ref(open_all))
+        show_window_pop_list::Ref{Bool}
+        GuiState(; show_app_metrics=true, show_overlay_input=true, show_window_pop_list) = new(Ref(show_app_metrics), Ref(show_overlay_input), Ref(show_window_pop_list))
+        GuiState(open_all) =  new(open_all, Ref(open_all), Ref(open_all))
     end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
@@ -199,6 +201,63 @@ module LSGui
         end # @cstatic
     end
 
+    function ShowAgentTree(uid, aAgent)
+        prefix = "Agent"
+        CImGui.PushID(uid) # use object uid as identifier. most commonly you could also use the object pointer as a base ID.
+        CImGui.AlignTextToFramePadding()  # Text and Tree nodes are less high than regular widgets, here we add vertical spacing to make the tree lines equal high.
+        node_open = CImGui.TreeNode("Object", "Agent #$(uid)")
+        CImGui.NextColumn()
+        CImGui.AlignTextToFramePadding()
+        CImGui.Text("= = = = = = = =  ")
+        CImGui.NextColumn()
+        agent_fields = fieldnameflatten(aAgent)
+        agent_values = flatten(aAgent)
+        # @show flatten(aAgent)
+
+        field_id = 1
+        if node_open
+            for (field,value) in zip(agent_fields,agent_values)
+                #@show field , value
+                CImGui.PushID(field_id)
+                CImGui.AlignTextToFramePadding()
+                flag = CImGui.ImGuiTreeNodeFlags_Leaf | CImGui.ImGuiTreeNodeFlags_NoTreePushOnOpen | CImGui.ImGuiTreeNodeFlags_Bullet
+                CImGui.TreeNodeEx("Fieldtest123", flag, string(field))
+
+                CImGui.NextColumn()
+                CImGui.PushItemWidth(-1)
+                
+                CImGui.Text("value: " * string(value))
+
+                CImGui.PopItemWidth()
+                CImGui.NextColumn()
+                CImGui.PopID()
+                field_id+=1
+            end
+            CImGui.TreePop()
+        end
+        CImGui.PopID()
+    end
+    
+    function ShowwindowPopulationList(simState::Ref{SimulationState}, p_open::Ref{Bool})
+        CImGui.SetNextWindowSize((430,450), CImGui.ImGuiCond_FirstUseEver)
+        CImGui.Begin("Agent List", p_open) || (CImGui.End(); return)
+
+        CImGui.PushStyleVar(CImGui.ImGuiStyleVar_FramePadding, (2,2))
+        CImGui.Columns(2)
+        CImGui.Separator()
+        # ShowHelpMarker("This example shows how you may implement a property editor using two columns.\nAll objects/fields data are dummies here.\nRemember that in many simple cases, you can use CImGui.SameLine(xxx) to position\nyour cursor horizontally instead of using the Columns() API.");
+
+        tree_id = 1
+        for agent in simState[].last_step[].agent_list
+            ShowAgentTree(tree_id,agent)
+            tree_id += 1
+        end
+
+        CImGui.Columns(1)
+        CImGui.Separator()
+        CImGui.PopStyleVar()
+        CImGui.End()
+    end # ShowwindowPopulationList
 
 
     # this is the UI function, whenever the structure of `MyStates` is changed, 
@@ -207,6 +266,7 @@ module LSGui
 
         showWindowSimulationView(controlState, simState)
         showWindowOptions!(guiState, controlState)
+        ShowwindowPopulationList(simState, guiState[].show_window_pop_list)
 
         guiState[].show_app_metrics[] && CImGui.ShowMetricsWindow(guiState[].show_app_metrics)
         guiState[].show_overlay_input[] && ShowOverlayInput!(guiState[].show_overlay_input)
