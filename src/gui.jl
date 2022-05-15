@@ -100,7 +100,8 @@ module LSGui
             CImGui.InvisibleButton("canvas", canvas_size) 
             
             CImGui.Separator()
-            CImGui.Text(string("Frametime: ", simState[].last_step[].last_frame_time_ms, "ms"))
+            frametime = simState[].last_step[].last_frame_time_ms
+            CImGui.Text(string( @sprintf( "Frametime: %07.3f ms / %09.2f fps", frametime, 1000/frametime)))
             
             min_frametime_ms = Ref(controlState[].min_frametime_ms)
             CImGui.SliderFloat("min_frame_time", min_frametime_ms, 0.0, 100.0, "time = %.3f ms")
