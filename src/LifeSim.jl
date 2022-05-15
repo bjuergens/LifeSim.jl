@@ -18,9 +18,12 @@ module LifeSim
 
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_gui::Ref{ControlState})
         lock(lk_ctrl)
-        try            
+        try
+            #= note:
+             this lock is pretty useless ATM, since the gui writes to ctrlState without a lock. 
+             For now it's not an issue, since this copy is atomic (hopefully)
+            =#
             ctrl_state_to_sim[] =  deepcopy(ctrl_state_from_gui[])
-            # ctrl_state_from_gui[] =  deepcopy(ctrl_state_to_sim[])
         finally
             unlock(lk_ctrl)
         end
@@ -63,7 +66,7 @@ module LifeSim
 
 
         @info "starting render loop..."
-        t_render, _ = start_render_loop!(ref_ctrl_state_from_gui, ref_sim_state_to_gui, true)
+        t_render, _ = LS_render_loop!(ref_ctrl_state_from_gui, ref_sim_state_to_gui, true)
         @info "starting update loop..."
         t_update = update_loop(ref_ctrl_state_to_simulation, ref_ctrl_state_from_gui,
                                ref_sim_state_to_gui,         ref_sim_state_to_simulation)  
@@ -79,7 +82,6 @@ module LifeSim
         #ref_ctrl_state_to_simulation[].is_stop = true
         wait(t_update)
         wait(workThread)
-
 
         @info "num simulation steps " ref_sim_state_to_simulation[].last_step[].num_step
         @info "final sim state " ref_sim_state_to_simulation[]

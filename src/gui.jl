@@ -6,7 +6,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSGui
-    export start_render_loop!
+    export LS_render_loop! # LS-prefix to avoid namecollision
     using Revise
     using CImGui
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
@@ -208,8 +208,9 @@ module LSGui
 
         guiState[].show_overlay_input[] && ShowOverlayInput!(guiState[].show_overlay_input)
     end
-
-    function start_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false)
+    
+    # LS-prefix to avoid namecollision
+    function LS_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false) 
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
         gui_state = Ref(GuiState(true, Ref(true)))
@@ -234,7 +235,7 @@ function doTest()
 @testset "Examples" begin
     
     function render_win_for_half_second()
-        _, window = start_render_loop!(Ref(ctrlState), Ref(simState))
+        _, window = LS_render_loop!(Ref(ctrlState), Ref(simState))
         sleep(0.5)
         GLFW.SetWindowShouldClose(window, true)
         return true
@@ -256,7 +257,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     keep_open = false
     if keep_open
-        t_render, _ = start_render_loop!(ctrlState, Ref(simState))
+        t_render, _ = LS_render_loop!(ctrlState, Ref(simState)) # LS-prefix to avoid namecollision
         t_update = infinite_loop(ctrlState)
         !isinteractive() && wait(t_render)
     end
