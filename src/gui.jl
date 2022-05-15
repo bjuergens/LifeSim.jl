@@ -136,10 +136,20 @@ module LSGui
 
             CImGui.Separator()
             CImGui.Button("REVISE") && begin 
-                @info "revise..."
+                @info "doing revise on gui"
                 revise()
+                @info "send revise request"
                 controlState[].request_revise += 1
-                @info "revise... done"
+            end
+            CImGui.Button("PAUSE") && begin 
+                @info "send request_pause"
+                revise()
+                controlState[].request_pause += 1
+            end
+            CImGui.Button("PLAY") && begin 
+                @info "send request_play"
+                revise()
+                controlState[].request_play += 1
             end
             CImGui.Separator()
         CImGui.End()

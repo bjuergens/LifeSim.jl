@@ -41,6 +41,8 @@ mutable struct ControlState
     afloat::Cfloat
     min_frametime_ms::Cfloat
     request_revise::Int
+    request_pause::Int
+    request_play::Int
 end
 
 end #module LSModels
@@ -53,7 +55,7 @@ using ..LSModels
 using CImGui: IM_COL32
 aAgent = Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
 bAgent = Agent(Vec2(0.6, 0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)   
-ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5)
+ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5, 1, 1)
 stepStep = SimulationStep(1, [aAgent, bAgent], 0.1)
 simState = SimulationState(stepStep)
 end #module MyModelExamples

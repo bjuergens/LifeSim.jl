@@ -148,11 +148,16 @@ module LSSimulation
 
         ctrlState = ctrlState_transfer[]
         simState = simState_transfer[].last_step[]
-        last_time_ns = Base.time_ns()
-        last_request_revise= ctrlState.request_revise
+        last_request_revise = ctrlState.request_revise
+        last_request_play = ctrlState.request_play
+        last_request_pause = ctrlState.request_pause
+        is_paused = false
         while !ctrlState.is_stop
             # some things must be handled outside doSimulationStep and thus can not be hot-reloaded
             # these are: handle the reload and passing data between iterations.  
+
+            last_time_ns = Base.time_ns()
+            ctrlState = ctrlState_transfer[]
             if last_request_revise != ctrlState.request_revise
                 if last_request_revise > ctrlState.request_revise
                     @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
@@ -161,14 +166,28 @@ module LSSimulation
                 last_request_revise = ctrlState.request_revise
                 revise()
             end
+            if last_request_play != ctrlState.request_play
+                @info "request_play received"
+                last_request_play = ctrlState.request_play
+                is_paused = false
+            end
+            if last_request_pause != ctrlState.request_pause
+                @info "request_pause received"
+                last_request_pause = ctrlState.request_pause
+                is_paused = true
+            end
+
+
+            if is_paused
+                sleep(0.1)
+                continue
+            end
+
             if hotloading
                 simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
             else
                 simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
             end
-
-            last_time_ns = Base.time_ns()
-            ctrlState = ctrlState_transfer[]
         end
         @info "simulationLoop!... done"
     end
