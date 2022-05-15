@@ -7,6 +7,7 @@ end
 
 module LSGui
     export LS_render_loop! # LS-prefix to avoid namecollision
+    export GuiState
     using Revise
     using CImGui
     render_source = joinpath(pathof(CImGui), "..", "..", "examples", "Renderer.jl")
@@ -25,6 +26,8 @@ module LSGui
     mutable struct GuiState
         show_app_metrics::Bool
         show_overlay_input::Ref{Bool}
+        GuiState(; show_app_metrics=true, show_overlay_input=true) = new(show_app_metrics, Ref(show_overlay_input))
+        GuiState(open_all) =  new(open_all, Ref(open_all))
     end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
@@ -208,14 +211,13 @@ module LSGui
 
         guiState[].show_overlay_input[] && ShowOverlayInput!(guiState[].show_overlay_input)
     end
-    
+
     # LS-prefix to avoid namecollision
-    function LS_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, hotreload=false) 
+    function LS_render_loop!(ctrlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState}, hotreload=false )
         @info "starting render loop..."
         window, ctx = init_renderer(800, 600, "LifeSim.jl")
-        gui_state = Ref(GuiState(true, Ref(true)))
         GC.@preserve window ctx begin
-                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState, gui_state), hotreload)
+                t = @async renderloop(window, ctx,  ()->ui(ctrlState, simState, guiState), hotreload)
         end
         return t, window
     end
@@ -235,7 +237,8 @@ function doTest()
 @testset "Examples" begin
     
     function render_win_for_half_second()
-        _, window = LS_render_loop!(Ref(ctrlState), Ref(simState))
+
+        _, window = LS_render_loop!(Ref(ctrlState), Ref(simState), Ref(GuiState(true)) )
         sleep(0.5)
         GLFW.SetWindowShouldClose(window, true)
         return true
@@ -248,17 +251,9 @@ end #module GuiTests
 
     
 if abspath(PROGRAM_FILE) == @__FILE__
-    
     using .LSGui
     using .LSModels
     using .LSModelExamples
     using .GuiTests
     doTest()
-
-    keep_open = false
-    if keep_open
-        t_render, _ = LS_render_loop!(ctrlState, Ref(simState)) # LS-prefix to avoid namecollision
-        t_update = infinite_loop(ctrlState)
-        !isinteractive() && wait(t_render)
-    end
 end

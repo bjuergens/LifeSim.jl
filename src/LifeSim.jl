@@ -66,7 +66,7 @@ module LifeSim
 
 
         @info "starting render loop..."
-        t_render, _ = LS_render_loop!(ref_ctrl_state_from_gui, ref_sim_state_to_gui, true)
+        t_render, _ = LS_render_loop!(ref_ctrl_state_from_gui, ref_sim_state_to_gui, Ref(GuiState(false)) ,  true)
         @info "starting update loop..."
         t_update = update_loop(ref_ctrl_state_to_simulation, ref_ctrl_state_from_gui,
                                ref_sim_state_to_gui,         ref_sim_state_to_simulation)  
