@@ -56,14 +56,12 @@ end #module MyModelExamples
 
 
 module ModelTests
-# Testing-module is needed as workaround for error "ERROR: LoadError: UndefVarError: @safetestset not defined"
-# when macro is called in toplevel-block that is not a module.
-using SafeTestsets
 export doTest
+using Test
+using ..LSModels
+using ..LSModelExamples
 function doTest()
-@safetestset "Examples" begin
-    using ...LSModels
-    using ...LSModelExamples
+@testset "Examples" begin
     @info "ModelExamples" aAgent bAgent ctrlState simState stepStep
 
     @test 0<aAgent.pos.x<1

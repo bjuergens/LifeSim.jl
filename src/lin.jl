@@ -127,9 +127,9 @@ end #module
 
 
 module LinTests
-using SafeTestsets
-using Test
 export doTest
+using Test
+using Test
 using ..LSLin
 
 
