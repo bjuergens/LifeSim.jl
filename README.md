@@ -16,6 +16,18 @@ Note: hot-reloading only works when starting as a module. Also not all parts of 
 
 # dev notes
 
+## add deps
+
+
+```
+# julia -> ']'
+activate .
+add $packet
+resolve
+# git commit Project.toml
+```
+
+## workflow
 every src-file exept the main-sourcefile contains a main module and a test module. The latter is executed when running the sourcefile as a script. 
 
 The general workflow is to start the main loop from the module. Then modifying a sourcefile, then running the sourcefile directly (ctrl+f5 in vscode) to see if the tests still pass and at last clicking the revise-button to hot-reload into the running window. 
