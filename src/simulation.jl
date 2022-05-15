@@ -42,17 +42,15 @@ module LSSimulation
         compass_north::Cfloat ## direction to y-axis with respect to current direction
         compass_center::Cfloat ## direction to world middle with respect to current direction
     end
-
-    function makeSensorInput(aAgent)
-       
+        
+        function makeSensorInput(aAgent)
+            
         # direction-angle points east because that's where the x-axis is
         compass_north = aAgent.direction_angle + pi/2
         
-        
         abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
-        compass_center =  abs_direction_to_center - aAgent.direction_angle
+        compass_center =  aAgent.direction_angle -  abs_direction_to_center
 
-        # @show WORLD_CENTER aAgent.pos aAgent.direction_angle abs_direction_to_center compass_center
         return SensorInput(
             wrap(compass_north,0, 2pi), 
             wrap(compass_center,0, 2pi))
@@ -66,7 +64,7 @@ module LSSimulation
 
         # when center is to the left , move left
         # when center is to the right, move right
-        if input.compass_center < pi
+        if input.compass_center > pi
             return ActionIntention(1.0)
         else
             return ActionIntention(-1.0)
@@ -85,7 +83,7 @@ module LSSimulation
             sensor = makeSensorInput(agent)
             desire = agent_think(sensor)
 
-            rotation =  + desire.rotate * MAX_ROTATE          
+            rotation = desire.rotate * MAX_ROTATE  
             a_direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
 
             push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
