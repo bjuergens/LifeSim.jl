@@ -104,7 +104,7 @@ module LSSimulation
         end
 
         if 0 == mod(simStep.num_step, 100)
-            @info "doing evolution-step"
+            @info "100 steps have passed"
 
             # todo: kill some agents
             # todo: make some cross-overs
@@ -116,10 +116,15 @@ module LSSimulation
     end
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
-    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
+
         # first part: update actual state
         agentList = update_agents(simState, ctrlState)
 
+
+        if add_agent_in_this_step
+            push!(agentList, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1))
+        end
 
         # second part: perform meta-tasks around simulation step
         
@@ -149,6 +154,7 @@ module LSSimulation
         last_request_revise = ctrlState.request_revise
         last_request_play = ctrlState.request_play
         last_request_pause = ctrlState.request_pause
+        last_request_add_agent = ctrlState.request_add_agent
         is_paused = false
         while !ctrlState.is_stop
             # some things must be handled outside doSimulationStep and thus can not be hot-reloaded
@@ -156,6 +162,7 @@ module LSSimulation
 
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
+            add_agent_in_this_step = false
             if last_request_revise != ctrlState.request_revise
                 if last_request_revise > ctrlState.request_revise
                     @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
@@ -174,6 +181,11 @@ module LSSimulation
                 last_request_pause = ctrlState.request_pause
                 is_paused = true
             end
+            if last_request_add_agent != ctrlState.request_add_agent
+                @info "request_add_agent received"
+                last_request_add_agent = ctrlState.request_add_agent
+                add_agent_in_this_step = true
+            end
 
 
             if is_paused
@@ -182,9 +194,9 @@ module LSSimulation
             end
 
             if hotloading
-                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
             else
-                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState)
+                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
             end
         end
         @info "simulationLoop!... done"

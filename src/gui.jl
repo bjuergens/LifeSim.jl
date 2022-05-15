@@ -145,13 +145,15 @@ module LSGui
             end
             CImGui.Button("PAUSE") && begin 
                 @info "send request_pause"
-                revise()
                 controlState[].request_pause += 1
             end
             CImGui.Button("PLAY") && begin 
                 @info "send request_play"
-                revise()
                 controlState[].request_play += 1
+            end
+            CImGui.Button("add agent") && begin 
+                @info "send request_add_agent"
+                controlState[].request_add_agent += 1
             end
             CImGui.Separator()
         CImGui.End()
