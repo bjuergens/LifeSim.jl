@@ -12,7 +12,7 @@ using ..LSLin
 
 "position in simulation-space"
 
-
+"a single individual in sim"
 mutable struct Agent
     pos::Vec2
     direction_angle:: Cfloat
@@ -22,16 +22,19 @@ mutable struct Agent
     id::Int
 end
 
+"current step of sim"
 struct SimulationStep
     num_step::Int
     agent_list::Vector{Agent}
     last_frame_time_ms::Float64
 end
 
+"info sent from sim to gui"
 mutable struct SimulationState
     last_step::Ref{SimulationStep}
 end
 
+"info sent from gui to sim"
 mutable struct ControlState
     arr::Vector{Cfloat}
     is_stop::Bool
@@ -39,6 +42,7 @@ mutable struct ControlState
     min_frametime_ms::Cfloat
     request_revise::Int
 end
+
 end #module LSModels
 
 
