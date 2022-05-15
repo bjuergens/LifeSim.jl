@@ -128,7 +128,7 @@ module LSSimulation
 
         # second part: perform meta-tasks around simulation step
         
-        last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000
+        last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000000
         time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
         if time_to_wait_s > 0
             # sleep is efficient but inacurate 
