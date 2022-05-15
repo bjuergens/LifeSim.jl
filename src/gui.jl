@@ -24,9 +24,9 @@ module LSGui
 
     "internal state of gui"
     mutable struct GuiState
-        show_app_metrics::Bool
+        show_app_metrics::Ref{Bool}
         show_overlay_input::Ref{Bool}
-        GuiState(; show_app_metrics=true, show_overlay_input=true) = new(show_app_metrics, Ref(show_overlay_input))
+        GuiState(; show_app_metrics=true, show_overlay_input=true) = new(Ref(show_app_metrics), Ref(show_overlay_input))
         GuiState(open_all) =  new(open_all, Ref(open_all))
     end
 
@@ -108,8 +108,6 @@ module LSGui
     end
 
     function showWindowOptions!(guiState::Ref{GuiState}, controlState::Ref{ControlState})
-        show_app_metrics = Ref(guiState[].show_app_metrics)
-        show_overlay_input = guiState[].show_overlay_input
         window_flags_options = CImGui.ImGuiWindowFlags(0)
         window_flags_options |= CImGui.ImGuiWindowFlags_MenuBar
         
@@ -119,7 +117,7 @@ module LSGui
             
             if CImGui.BeginMenuBar()
                 if CImGui.BeginMenu("Help")
-                    CImGui.MenuItem("Metrics", C_NULL, show_app_metrics)
+                    CImGui.MenuItem("Metrics", C_NULL, guiState[].show_app_metrics)
                     CImGui.MenuItem("InputInfo", C_NULL, guiState[].show_overlay_input)
                     CImGui.EndMenu()
                 end
@@ -145,14 +143,6 @@ module LSGui
             end
             CImGui.Separator()
         CImGui.End()
-
-        guiState[].show_app_metrics = show_app_metrics[]
-    end
-
-    function showWindowMetrics!(guiState::Ref{GuiState})
-        show_app_metrics = Ref(guiState[].show_app_metrics)
-        show_app_metrics[] && CImGui.ShowMetricsWindow(show_app_metrics)
-        guiState[].show_app_metrics = show_app_metrics[]
     end
 
     function ShowOverlayInput!(p_open::Ref{Bool})
@@ -207,8 +197,8 @@ module LSGui
 
         showWindowSimulationView(controlState, simState)
         showWindowOptions!(guiState, controlState)
-        showWindowMetrics!(guiState)
 
+        guiState[].show_app_metrics[] && CImGui.ShowMetricsWindow(guiState[].show_app_metrics)
         guiState[].show_overlay_input[] && ShowOverlayInput!(guiState[].show_overlay_input)
     end
 
