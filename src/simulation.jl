@@ -43,13 +43,13 @@ module LSSimulation
         compass_center::Cfloat ## direction to world middle with respect to current direction
     end
         
-        function makeSensorInput(aAgent)
+    function makeSensorInput(aAgent)
             
         # direction-angle points east because that's where the x-axis is
         compass_north = aAgent.direction_angle + pi/2
         
         abs_direction_to_center = direction(aAgent.pos, WORLD_CENTER)
-        compass_center =  aAgent.direction_angle -  abs_direction_to_center
+        compass_center = aAgent.direction_angle - abs_direction_to_center
 
         return SensorInput(
             wrap(compass_north,0, 2pi), 
@@ -71,8 +71,16 @@ module LSSimulation
         end
     end
 
+    function cull!(agent_list::Vector{Agent}, num::Int)
+        sorted = sort(agent_list, by= a-> distance(a.pos, WORLD_CENTER))
+        for i = 1:num
+            pop!(sorted)
+        end
+        return sorted
+    end
+
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
-        agent_list_individually = []
+        agent_list_individually::Vector{Agent} = []
 
         for agent in simStep.agent_list
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
@@ -103,9 +111,15 @@ module LSSimulation
             end
         end
 
+        # todo: get cull thresh, cull number and cull frequency from ctrlstate
         if 0 == mod(simStep.num_step, 100)
             @info "100 steps have passed"
 
+            if length(agent_list_individually) > 10
+                @show agent_list_individually
+                @show typeof(agent_list_individually)
+                agent_list_individually = cull!(agent_list_individually,5)
+            end
             # todo: kill some agents
             # todo: make some cross-overs
             # todo: make some mutation
@@ -208,10 +222,12 @@ export doTest
 using Test
 using ..LSSimulation
 using ..LSModelExamples
+using ..LSModels
 using ..LSLin
+using ..LSSimulation:cull!
 
 function run_headless(max_time)
-    test_ctrlState = deepcopy(ctrlState)
+    test_ctrlState = ControlState()
     test_simState = deepcopy(simState)
     ctrlThread = Threads.@spawn begin
         sleep(max_time) 
@@ -259,7 +275,10 @@ end
 function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
-        @test run_headless(0.9) > 5
+
+        cull!_res = cull!([aAgent,bAgent],1)
+
+        @test run_headless(1.5) > 5
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)
@@ -272,9 +291,9 @@ function doTest()
         # center is right in front of agent
         @test applyMakeSensor( c + Vec2(-0.1,0.0), 0).compass_center ≈ 0
         # center is to the left
-        @test applyMakeSensor( c + Vec2(0.0,-0.1), 0).compass_center ≈ pi/2
+        @test applyMakeSensor( c + Vec2(0.0,-0.1), 0).compass_center ≈ 3pi/2
         # center is to the right
-        @test applyMakeSensor( c + Vec2(0.0,0.1), 0).compass_center ≈ 3pi/2
+        @test applyMakeSensor( c + Vec2(0.0,0.1), 0).compass_center ≈ pi/2
         # @test applyMakeSensor(Vec2(0.2,0.2), 0) ≈ LSSimulation.SensorInput(pi/2, pi/4)
     end 
 end
