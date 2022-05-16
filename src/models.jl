@@ -34,16 +34,17 @@ end
 
 "info sent from gui to sim"
 mutable struct ControlState
-    arr::Vector{Cfloat}
     is_stop::Bool
-    afloat::Cfloat
     min_frametime_ms::Cfloat
     request_revise::Int
     request_pause::Int
     request_play::Int
     request_add_agent::Int
 
-    ControlState(; is_stop=false, min_frame_time=100,request_revise=1,request_pause=1, request_play=1,request_add_agent=1) = new(Cfloat[sin(x) for x in 0:0.05:2pi], is_stop, 1.0, min_frame_time, request_revise, request_pause, request_play, request_add_agent)
+    ControlState(; is_stop=false, min_frame_time=100,
+            request_revise=1,request_pause=1, request_play=1,request_add_agent=1) =
+        new(       is_stop,        min_frame_time, 
+            request_revise,  request_pause,   request_play,  request_add_agent)
     # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end
 

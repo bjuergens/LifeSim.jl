@@ -28,8 +28,11 @@ module LSGui
         show_app_metrics::Ref{Bool}
         show_overlay_input::Ref{Bool}
         show_window_pop_list::Ref{Bool}
-        GuiState(; show_app_metrics=true, show_overlay_input=true, show_window_pop_list) = new(Ref(show_app_metrics), Ref(show_overlay_input), Ref(show_window_pop_list))
-        GuiState(open_all) =  new(open_all, Ref(open_all), Ref(open_all))
+        history_frametime::Vector{Cfloat}
+        history_num_agents::Vector{Cfloat}
+        GuiState(; show_app_metrics=true, show_overlay_input=true, show_window_pop_list, history_frametime=zeros(Cfloat, 100)) = 
+           new(Ref(show_app_metrics), Ref(show_overlay_input), Ref(show_window_pop_list),history_frametime)
+        GuiState(open_all) =  new(open_all, Ref(open_all), Ref(open_all), zeros(Cfloat, 100), zeros(Cfloat, 100))
     end
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
@@ -128,14 +131,14 @@ module LSGui
             end
             
             is_connected = Ref(controlState[].is_stop)
-            float_ref = Ref(controlState[].afloat)
-            CImGui.SliderFloat("slider float", float_ref, 0.0, 2.0, "ratio = %.3f")
-            controlState[].afloat = float_ref[]
 
             if CImGui.Checkbox("connected?", is_connected)
                 controlState[].is_stop = !is_connected[]
             end
-            CImGui.PlotLines("sine wave", controlState[].arr, length(controlState[].arr))
+            #PlotLines(label, values, values_count, values_offset=0, overlay_text=C_NULL, scale_min=FLT_MAX, scale_max=FLT_MAX, graph_size=ImVec2(0,0), stride=sizeof(Cfloat))
+            CImGui.PlotLines("frametimes", guiState[].history_frametime, length(guiState[].history_frametime),  0, "", 0,CImGui.FLT_MAX,ImVec2(200,50))
+            CImGui.PlotLines("num agents", guiState[].history_num_agents, length(guiState[].history_num_agents),0, "", 0,CImGui.FLT_MAX,ImVec2(200,50))
+
 
             CImGui.Separator()
             CImGui.Button("REVISE") && begin 
@@ -266,6 +269,15 @@ module LSGui
     # this is the UI function, whenever the structure of `MyStates` is changed, 
     # the corresponding changes should be applied
     function ui(controlState::Ref{ControlState}, simState::Ref{SimulationState}, guiState::Ref{GuiState})
+
+        insert!(guiState[].history_frametime, 1,  simState[].last_step[].last_frame_time_ms)
+        if length(guiState[].history_frametime)> 300
+            pop!(guiState[].history_frametime)
+        end
+        insert!(guiState[].history_num_agents, 1,  length(simState[].last_step[].agent_list))
+        if length(guiState[].history_num_agents)> 300
+            pop!(guiState[].history_num_agents)
+        end
 
         showWindowSimulationView(controlState, simState)
         showWindowOptions!(guiState, controlState)
