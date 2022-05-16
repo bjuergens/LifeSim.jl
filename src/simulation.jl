@@ -109,20 +109,25 @@ module LSSimulation
             end
         end
 
-        # todo: get cull thresh, cull number and cull frequency from ctrlstate
-        if 0 == mod(simStep.num_step, 100)
-            @info "100 steps have passed"
+        if length(agent_list_individually) <= ctrlState.cull_minimum
+            @info "birthing new agent... "
+            push!(agent_list_individually, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.04, IM_COL32(11,11,0,255),1))
+        end
 
-            if length(agent_list_individually) > 10
-                @show agent_list_individually
-                @show typeof(agent_list_individually)
-                agent_list_individually = cull!(agent_list_individually,5)
+        # todo: get cull thresh, cull number and cull frequency from ctrlstate
+        if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
+
+            if length(agent_list_individually) > ctrlState.cull_minimum
+                @info "culling..."
+                cull_num::Int = floor( length(agent_list_individually) * ctrlState.cull_percentage)
+                agent_list_individually = cull!(agent_list_individually,cull_num)
+            else
+                @info "not enough population to cull"
             end
             # todo: kill some agents
             # todo: make some cross-overs
             # todo: make some mutation
         end
-
 
         return agent_list_individually
     end
