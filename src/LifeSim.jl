@@ -7,8 +7,8 @@ module LifeSim
 
     include("lin.jl")
     include("models.jl")
-    include("gui.jl")
     include("simulation.jl")
+    include("gui.jl")
     
     # using StaticArrays
     using .LSModels
