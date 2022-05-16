@@ -293,6 +293,7 @@ module GuiTests
 # when macro is called in toplevel-block that is not a module.
 using Test
 using ..LSGui
+using ..LSModels
 using ..LSModelExamples
 using GLFW
 export doTest
@@ -301,7 +302,7 @@ function doTest()
     
     function render_win_for_half_second()
 
-        _, window = LS_render_loop!(Ref(ctrlState), Ref(simState), Ref(GuiState(true)) )
+        _, window = LS_render_loop!(Ref(ControlState()), Ref(simState), Ref(GuiState(true)) )
         sleep(0.5)
         GLFW.SetWindowShouldClose(window, true)
         return true

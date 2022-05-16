@@ -57,7 +57,7 @@ module LifeSim
 
         @info "running gui with some dummy-data for debugging..."
 
-        ctrl_state_from_gui = ctrlState
+        ctrl_state_from_gui = ControlState()
         ref_ctrl_state_from_gui = Ref(ctrl_state_from_gui)
         ref_ctrl_state_to_simulation = Ref(ctrl_state_from_gui)
 

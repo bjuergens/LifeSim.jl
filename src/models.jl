@@ -42,6 +42,9 @@ mutable struct ControlState
     request_pause::Int
     request_play::Int
     request_add_agent::Int
+
+    ControlState(; is_stop=false, min_frame_time=100,request_revise=1,request_pause=1, request_play=1,request_add_agent=1) = new(Cfloat[sin(x) for x in 0:0.05:2pi], is_stop, 1.0, min_frame_time, request_revise, request_pause, request_play, request_add_agent)
+    # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end
 
 end #module LSModels
@@ -49,14 +52,14 @@ end #module LSModels
 
 """viable example for all models used by testclasses for most other modules in this repo"""
 module LSModelExamples
-export ctrlState, simState, aAgent, bAgent, stepStep
+export simState, aAgent, bAgent, stepStep, ccc
 using ..LSModels
 using CImGui: IM_COL32
 aAgent = Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
 bAgent = Agent(Vec2(0.6, 0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)   
-ctrlState = ControlState(Cfloat[sin(x) for x in 0:0.05:2pi], false,0.9, 50.0, 5, 1, 1, 1)
 stepStep = SimulationStep(1, [aAgent, bAgent], 0.1)
 simState = SimulationState(stepStep)
+ccc = ControlState()
 end #module MyModelExamples
 
 
@@ -64,12 +67,14 @@ module ModelTests
 export doTest
 using Test
 using ..LSModels
+
 using ..LSModelExamples
 function doTest()
 @testset "Examples" begin
-    @info "ModelExamples" aAgent bAgent ctrlState simState stepStep
+    @info "ModelExamples" aAgent bAgent simState stepStep
 
     @test 0<aAgent.pos.x<1
+    @test !ControlState().is_stop
     @test 1+1==2  # canary
 end
 end
