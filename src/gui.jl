@@ -188,6 +188,18 @@ module LSGui
                 controlState[].request_add_agent += 1
             end
             CImGui.Separator()
+
+            cull_minimum = Ref(controlState[].cull_minimum)
+            CImGui.SliderInt("cull_minimum", cull_minimum, 1, 100)
+            controlState[].cull_minimum = cull_minimum[]
+
+            cull_frequency = Ref(controlState[].cull_frequency)
+            CImGui.SliderFloat("cull_frequency", cull_frequency, 1, 100)
+            controlState[].cull_frequency = cull_frequency[]
+
+            cull_percentage = Ref(controlState[].cull_percentage)
+            CImGui.SliderFloat("cull_percentage", cull_percentage, 1, 100)
+            controlState[].cull_percentage = cull_percentage[]
         CImGui.End()
     end
 

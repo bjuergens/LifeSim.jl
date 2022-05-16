@@ -44,7 +44,6 @@ module LSSimulation
     end
         
     function makeSensorInput(aAgent)
-            
         # direction-angle points east because that's where the x-axis is
         compass_north = aAgent.direction_angle + pi/2 
         
