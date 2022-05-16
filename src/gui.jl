@@ -70,6 +70,18 @@ module LSGui
             IM_COL32(0, floor(255 * interval_to_ratio(aAgent.speed,0, 0.05)), 0, 255)
         )
 
+        compass_main = move_in_direction(aAgent.pos, sensor.compass_center, aAgent.size)
+        compass_ort1 = move_in_direction(aAgent.pos, sensor.compass_center-pi/2, aAgent.size/8)
+        compass_ort2 = move_in_direction(aAgent.pos, sensor.compass_center+pi/2, aAgent.size/8)
+
+        CImGui.AddTriangleFilled(draw_list,
+            sim_to_pixel_point(compass_main,canvas_pos, canvas_size),
+            sim_to_pixel_point(compass_ort1,canvas_pos, canvas_size),
+            sim_to_pixel_point(compass_ort2,canvas_pos, canvas_size),
+            IM_COL32(255, 255, 255, 50)
+        )
+
+
         CImGui.AddCircleFilled(draw_list, 
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size), 
             canvas_size.x * aAgent.size / 10, 
