@@ -3,6 +3,7 @@
 if abspath(PROGRAM_FILE) == @__FILE__
     include("lin.jl")
     include("models.jl") 
+    include("simulation.jl")
 end
 
 module LSGui
@@ -17,11 +18,13 @@ module LSGui
     using .Renderer:renderloop
     using ..LSModels
     using ..LSLin
+    using ..LSSimulation:makeSensorInput
     using CImGui: ImVec2, ImVec4, IM_COL32, ImU32
 
     using CImGui.CSyntax.CStatic
     using Printf
     using Flatten
+
 
     "internal state of gui"
     mutable struct GuiState
@@ -43,6 +46,13 @@ module LSGui
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
         
+        # todo: draw sensordata
+        sensor = makeSensorInput(aAgent)
+
+        #sleep(100)
+        #@show sensor
+        #sleep(100)
+
         CImGui.AddCircleFilled(draw_list, 
             sim_to_pixel_point(aAgent.pos, canvas_pos, canvas_size), 
             canvas_size.x * aAgent.size, 
@@ -70,6 +80,7 @@ module LSGui
             canvas_size.x * aAgent.size / 10, 
             IM_COL32(255, 0 ,0 , 255), 
             12)
+
        
     end
 
