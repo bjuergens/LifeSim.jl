@@ -10,8 +10,6 @@ export SimulationState, ControlState, SimulationStep, Vec2
 using CImGui: IM_COL32
 using ..LSLin
 
-"position in simulation-space"
-
 "a single individual in sim"
 mutable struct Agent
     pos::Vec2

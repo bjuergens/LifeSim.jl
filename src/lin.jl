@@ -14,6 +14,7 @@ module LSLin
     const dist_euclid = Euclidean() # initiate one instance at compiletime for faster speed, maybe
     const Ɛ =  1e-15
 
+    "position in simulation-space"
     struct Vec2{T} <: FieldVector{2, T}
         x::T
         y::T
