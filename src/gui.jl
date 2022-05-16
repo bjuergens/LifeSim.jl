@@ -58,15 +58,10 @@ module LSGui
             canvas_size.x * aAgent.size, 
             aAgent.color, 
             12)
-        # todo: use LSLin here
-        agent_move = Vec2( aAgent.pos.x + cos(aAgent.direction_angle) * aAgent.size,
-                           aAgent.pos.y + sin(aAgent.direction_angle) * aAgent.size)
-        agent_move_ort = Vec2( cos(pi/2+aAgent.direction_angle) * (aAgent.size/3),
-                               sin(pi/2+aAgent.direction_angle) * (aAgent.size/3))
-        agent_move_ort1 = Vec2( convert(Cfloat, aAgent.pos.x + agent_move_ort.x),
-                                convert(Cfloat, aAgent.pos.y + agent_move_ort.y))
-        agent_move_ort2 = Vec2(convert(Cfloat, aAgent.pos.x - agent_move_ort.x),
-                               convert(Cfloat, aAgent.pos.y - agent_move_ort.y))
+
+        agent_move      = move_in_direction(aAgent.pos, aAgent.direction_angle, aAgent.size)
+        agent_move_ort1 = move_in_direction(aAgent.pos, aAgent.direction_angle-pi/2, aAgent.size/3)
+        agent_move_ort2 = move_in_direction(aAgent.pos, aAgent.direction_angle+pi/2, aAgent.size/3)
 
         CImGui.AddTriangleFilled(draw_list,
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size),
