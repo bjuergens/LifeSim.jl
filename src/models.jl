@@ -12,18 +12,19 @@ using ..LSLin
 
 "a single individual in sim"
 mutable struct Agent
+    id::Int64
     pos::Vec2
     direction_angle:: Cfloat
     speed::Cfloat
     size::Cfloat
     color::UInt32
-    id::Int
-    Agent(idx; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.05, color=255) = new(pos,direction_angle,speed,size,color,idx)
+    Agent(idx; pos=Vec2(0.3, 0.3), direction_angle=0.1, speed=0.1, size=0.1, color=255) = 
+      new(idx, pos,                direction_angle,     speed,     size,      color)
 end
 
 "current step of sim"
 struct SimulationStep
-    num_step::Int
+    num_step::Int64
     agent_list::Vector{Agent}
     next_agent_id::Int
     last_frame_time_ms::Float64
