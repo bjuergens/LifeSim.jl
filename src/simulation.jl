@@ -65,9 +65,6 @@ module LSSimulation
     end
 
     function agent_think(input::SensorInput)
-
-        # when center is to the left , move left
-        # when center is to the right, move right
         if input.compass_center > pi
             return ActionIntention(1.0)
         else
@@ -167,7 +164,7 @@ module LSSimulation
             if length(agentList) > ctrlState.cull_minimum
                 @info "culling..."
                 step_of_last_cull=simStep.num_step
-                cull_num::Int = floor( length(agentList) * ctrlState.cull_percentage)
+                cull_num::Int = floor( length(agentList) * ctrlState.cull_ratio)
                 agentList = cull!(agentList,cull_num)
             else
                 @info "not enough population to cull"

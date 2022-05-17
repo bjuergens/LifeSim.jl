@@ -197,9 +197,9 @@ module LSGui
             CImGui.SliderFloat("cull_frequency", cull_frequency, 1, 100)
             controlState[].cull_frequency = cull_frequency[]
 
-            cull_percentage = Ref(controlState[].cull_percentage)
-            CImGui.SliderFloat("cull_percentage", cull_percentage, 1, 100)
-            controlState[].cull_percentage = cull_percentage[]
+            cull_ratio = Ref(controlState[].cull_ratio)
+            CImGui.SliderFloat("cull_ratio", cull_ratio, 0, 1)
+            controlState[].cull_ratio = cull_ratio[]
         CImGui.End()
     end
 

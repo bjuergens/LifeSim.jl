@@ -43,15 +43,15 @@ mutable struct ControlState
     min_frametime_ms::Cfloat
     cull_minimum::Cint
     cull_frequency::Cfloat
-    cull_percentage::Cfloat
+    cull_ratio::Cfloat
     request_revise::Int
     request_pause::Int
     request_play::Int
     request_add_agent::Int
 
-    ControlState(; is_stop=false, min_frame_time=100, cull_minimum=5, cull_frequency=100, cull_percentage=0.3, 
+    ControlState(; is_stop=false, min_frame_time=100, cull_minimum=5, cull_frequency=100, cull_ratio=0.3, 
             request_revise=1,request_pause=1, request_play=1,request_add_agent=1) =
-        new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_percentage,
+        new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_ratio,
             request_revise,  request_pause,   request_play,  request_add_agent)
     # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end
