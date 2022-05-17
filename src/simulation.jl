@@ -70,6 +70,10 @@ module LSSimulation
     end
 
     function cull!(agent_list::Vector{Agent}, num::Int)
+        if length(agent_list) < num
+            @warn "cant cull more agents than there are" length(agent_list) num
+            return agent_list
+        end
         sorted = sort(agent_list, by= a-> distance(a.pos, WORLD_CENTER))
         for i = 1:num
             pop!(sorted)
@@ -80,8 +84,16 @@ module LSSimulation
     function update_agents(simStep::SimulationStep, ctrlState::ControlState)
         agent_list_individually::Vector{Agent} = []
 
+        steps_since_last_cull = simStep.num_step - simStep.step_of_last_cull
+        is_pushing_agents = steps_since_last_cull < ctrlState.cull_frequency/3
+
         for agent in simStep.agent_list
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
+
+            if is_pushing_agents
+                # @info "blubb"
+                pos_new = move_in_direction(pos_new, -direction(agent.pos, WORLD_CENTER), 0.1)
+            end
 
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
             agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
@@ -114,13 +126,25 @@ module LSSimulation
             push!(agent_list_individually, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.04, IM_COL32(11,11,0,255),1))
         end
 
+
+        return agent_list_individually
+    end
+
+    "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
+    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step)
+
+        # first part: update actual state
+        agentList = update_agents(simStep, ctrlState)
+
+        step_of_last_cull = simStep.step_of_last_cull
         # todo: get cull thresh, cull number and cull frequency from ctrlstate
         if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
 
-            if length(agent_list_individually) > ctrlState.cull_minimum
+            if length(agentList) > ctrlState.cull_minimum
                 @info "culling..."
-                cull_num::Int = floor( length(agent_list_individually) * ctrlState.cull_percentage)
-                agent_list_individually = cull!(agent_list_individually,cull_num)
+                step_of_last_cull=simStep.num_step
+                cull_num::Int = floor( length(agentList) * ctrlState.cull_percentage)
+                agentList = cull!(agentList,cull_num)
             else
                 @info "not enough population to cull"
             end
@@ -128,16 +152,6 @@ module LSSimulation
             # todo: make some cross-overs
             # todo: make some mutation
         end
-
-        return agent_list_individually
-    end
-
-    "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
-    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
-
-        # first part: update actual state
-        agentList = update_agents(simState, ctrlState)
-
 
         if add_agent_in_this_step
             push!(agentList, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1))
@@ -155,11 +169,12 @@ module LSSimulation
 
         lock(lk_sim)
         try
-            simState_transfer[].last_step=Ref(simState)
+            simState_transfer[].last_step=Ref(simStep)
         finally
             unlock(lk_sim)
         end
-        return SimulationStep(simState.num_step + 1, agentList, last_frame_time_ms)
+        
+        return SimulationStep(num_step=simStep.num_step + 1, agent_list= agentList, last_frame_time_ms=last_frame_time_ms, step_of_last_cull=step_of_last_cull)
     end
 
 
