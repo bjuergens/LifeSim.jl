@@ -14,6 +14,12 @@ module LSSimulation
     using CImGui: IM_COL32
     using Distances: Euclidean
     using Combinatorics: combinations
+    using StatsBase: sample
+    using StatsBase: samplepair
+    using StatsBase: counteq # für genetische distanz, wobei es da noch viele andere metriken in der lib gibt
+
+    # using Distributions: Normal # too slow!!
+
 
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
@@ -81,10 +87,19 @@ module LSSimulation
         return sorted
     end
 
+
+    function myrand()
+        return rand()^2
+    end
+    function randiff(input)
+        # todo: use normal dist here
+        return input * (1 - rand()^2 )
+    end
     # todo: extra module for evo-stuff
-    function mutate(aAgent::Agent)
-        @info "mutating..." aAgent
-        return Agent(simStep.next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.01, speed=0.04, color=IM_COL32(11,11,0,255))
+    function mutate(aAgent::Agent, next_agent_id)
+        @info "mutating..." aAgent.pos.x+myrand()
+        
+        return Agent(next_agent_id,pos=Vec2(aAgent.pos.x+myrand(), aAgent.pos.y+myrand()),direction_angle=pi/2, size=0.09, speed=0.04, color=IM_COL32(11,11,0,255))
     end
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState, next_agent_id)
@@ -129,8 +144,9 @@ module LSSimulation
 
         if length(agent_list_individually) <= ctrlState.cull_minimum
             @info "birthing new agent... "
-            # child = mutate(agent)
-            push!(agent_list_individually, Agent(simStep.next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.01, speed=0.04, color=IM_COL32(11,11,0,255)))
+            parent = sample(agent_list_individually)
+            child = mutate(parent, next_agent_id)
+            push!(agent_list_individually, child)
             next_agent_id += 1
         end
 

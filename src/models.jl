@@ -18,7 +18,7 @@ mutable struct Agent
     size::Cfloat
     color::UInt32
     id::Int
-    Agent(idx; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.01, color=255) = new(pos,direction_angle,speed,size,color,idx)
+    Agent(idx; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.05, color=255) = new(pos,direction_angle,speed,size,color,idx)
 end
 
 "current step of sim"

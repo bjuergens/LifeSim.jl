@@ -9,6 +9,10 @@ julia -e "using Pkg; Pkg.develop(path=\"./\")"
 julia -e "using LifeSim; main()"
 ```
 
+```zsh
+julia -e "import Pkg; Pkg.activate("."); using LifeSim; main()"
+```
+
 Now you can hot-reload the repo by clicking the "revise"-button in the gui. 
 
 Note: hot-reloading only works when starting as a module. Also not all parts of the code can be hot-reloaded. 
