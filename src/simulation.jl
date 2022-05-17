@@ -81,7 +81,13 @@ module LSSimulation
         return sorted
     end
 
-    function update_agents(simStep::SimulationStep, ctrlState::ControlState)
+    # todo: extra module for evo-stuff
+    function mutate(aAgent::Agent)
+        @info "mutating..." aAgent
+        return Agent(simStep.next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.01, speed=0.04, color=IM_COL32(11,11,0,255))
+    end
+
+    function update_agents(simStep::SimulationStep, ctrlState::ControlState, next_agent_id)
         agent_list_individually::Vector{Agent} = []
 
         steps_since_last_cull = simStep.num_step - simStep.step_of_last_cull
@@ -104,7 +110,7 @@ module LSSimulation
             rotation = desire.rotate * MAX_ROTATE  
             a_direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
 
-            push!(agent_list_individually, Agent(Vec2(agent_pos_x, agent_pos_y), a_direction_angle, agent.speed , agent.size, agent.color, agent.id))
+            push!(agent_list_individually, Agent(agent.id, pos=Vec2(agent_pos_x, agent_pos_y), direction_angle=a_direction_angle, speed=agent.speed ,size= agent.size,color= agent.color))
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
@@ -123,21 +129,23 @@ module LSSimulation
 
         if length(agent_list_individually) <= ctrlState.cull_minimum
             @info "birthing new agent... "
-            push!(agent_list_individually, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.04, IM_COL32(11,11,0,255),1))
+            # child = mutate(agent)
+            push!(agent_list_individually, Agent(simStep.next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.01, speed=0.04, color=IM_COL32(11,11,0,255)))
+            next_agent_id += 1
         end
 
 
-        return agent_list_individually
+        return agent_list_individually, next_agent_id
     end
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
-    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step)
+    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step_request)
 
         # first part: update actual state
-        agentList = update_agents(simStep, ctrlState)
+        agentList, next_agent_id = update_agents(simStep, ctrlState, simStep.next_agent_id)
 
         step_of_last_cull = simStep.step_of_last_cull
-        # todo: get cull thresh, cull number and cull frequency from ctrlstate
+
         if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
 
             if length(agentList) > ctrlState.cull_minimum
@@ -148,13 +156,13 @@ module LSSimulation
             else
                 @info "not enough population to cull"
             end
-            # todo: kill some agents
             # todo: make some cross-overs
             # todo: make some mutation
         end
 
-        if add_agent_in_this_step
-            push!(agentList, Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1))
+        if add_agent_in_this_step_request
+            push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
+            next_agent_id+=1
         end
 
         # second part: perform meta-tasks around simulation step
@@ -174,7 +182,7 @@ module LSSimulation
             unlock(lk_sim)
         end
         
-        return SimulationStep(num_step=simStep.num_step + 1, agent_list= agentList, last_frame_time_ms=last_frame_time_ms, step_of_last_cull=step_of_last_cull)
+        return SimulationStep(num_step=simStep.num_step + 1, agent_list= agentList, last_frame_time_ms=last_frame_time_ms, step_of_last_cull=step_of_last_cull, next_agent_id=next_agent_id)
     end
 
 
@@ -194,7 +202,7 @@ module LSSimulation
 
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
-            add_agent_in_this_step = false
+            add_agent_in_this_step_request = false
             if last_request_revise != ctrlState.request_revise
                 if last_request_revise > ctrlState.request_revise
                     @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
@@ -216,7 +224,7 @@ module LSSimulation
             if last_request_add_agent != ctrlState.request_add_agent
                 @info "request_add_agent received"
                 last_request_add_agent = ctrlState.request_add_agent
-                add_agent_in_this_step = true
+                add_agent_in_this_step_request = true
             end
 
 
@@ -226,9 +234,9 @@ module LSSimulation
             end
 
             if hotloading
-                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
+                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step_request)
             else
-                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step)
+                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step_request)
             end
         end
         @info "simulationLoop!... done"

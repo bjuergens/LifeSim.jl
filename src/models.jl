@@ -18,16 +18,18 @@ mutable struct Agent
     size::Cfloat
     color::UInt32
     id::Int
+    Agent(idx; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.01, color=255) = new(pos,direction_angle,speed,size,color,idx)
 end
 
 "current step of sim"
 struct SimulationStep
     num_step::Int
     agent_list::Vector{Agent}
+    next_agent_id::Int
     last_frame_time_ms::Float64
     step_of_last_cull::Int
-    SimulationStep(;num_step=1, agent_list=[], last_frame_time_ms=50.0, step_of_last_cull=1) = 
-        new(num_step,agent_list,last_frame_time_ms,step_of_last_cull)
+    SimulationStep(;num_step=1, agent_list=[], next_agent_id=1, last_frame_time_ms=50.0, step_of_last_cull=1) = 
+        new(num_step,agent_list,next_agent_id,last_frame_time_ms,step_of_last_cull)
 end
 
 "info sent from sim to gui"
@@ -62,8 +64,9 @@ module LSModelExamples
 export simState, aAgent, bAgent, stepStep
 using ..LSModels
 using CImGui: IM_COL32
-aAgent = Agent(Vec2(0.3, 0.3), pi/2, 0.01, 0.11, IM_COL32(11,11,0,255),1)
-bAgent = Agent(Vec2(0.6, 0.6), 2*pi, 0.02, 0.13, IM_COL32(22,22,0,255),2)   
+# aAgent = Agent(1, pos=Vec2(0.3, 0.3), direction_angle= pi/2, speed=0.01, size=0.11, color=IM_COL32(11,11,0,255),1)
+aAgent = Agent(1)
+bAgent = Agent(2, pos=Vec2(0.6, 0.6), direction_angle=2*pi,  speed=0.02, size=0.13, color=IM_COL32(22,22,0,255))   
 # stepStep = SimulationStep(agent_list= [aAgent, bAgent])
 simState = SimulationState(SimulationStep(agent_list= [aAgent, bAgent]))
 end #module MyModelExamples
