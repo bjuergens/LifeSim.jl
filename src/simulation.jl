@@ -98,7 +98,11 @@ module LSSimulation
     end
     # todo: extra module for evo-stuff
     function mutate(aAgent::Agent, next_agent_id)
-        # @show randdiff(1)
+        
+        parent_genome = aAgent.brain.genome
+        @show parent_genome
+        # rand(Normal(input, 0.1), 1)
+
         return Agent(next_agent_id,
                         pos=Vec2(randdiff(aAgent.pos.x), randdiff(aAgent.pos.y)),
                         direction_angle=randdiff(aAgent.direction_angle), 
