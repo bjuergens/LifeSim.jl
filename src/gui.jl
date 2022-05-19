@@ -2,6 +2,7 @@
 
 if abspath(PROGRAM_FILE) == @__FILE__
     include("lin.jl")
+    include("neural.jl")
     include("models.jl") 
     include("simulation.jl")
 end
@@ -256,23 +257,26 @@ module LSGui
         CImGui.AlignTextToFramePadding()
         CImGui.Text("= = = = = = = =  ")
         CImGui.NextColumn()
-        agent_fields = fieldnameflatten(aAgent)
-        agent_values = flatten(aAgent)
-        # @show flatten(aAgent)
-
+        
+        agent_fields = fieldnames(typeof(aAgent))
+        agent_types = typeof(aAgent).types
         field_id = 1
         if node_open
-            for (field,value) in zip(agent_fields,agent_values)
-                #@show field , value
+            for (field_name, field_type) in zip(agent_fields,agent_types)
                 CImGui.PushID(field_id)
                 CImGui.AlignTextToFramePadding()
                 flag = CImGui.ImGuiTreeNodeFlags_Leaf | CImGui.ImGuiTreeNodeFlags_NoTreePushOnOpen | CImGui.ImGuiTreeNodeFlags_Bullet
-                CImGui.TreeNodeEx("Fieldtest123", flag, string(field))
+                CImGui.TreeNodeEx("Fieldtest123", flag, string(field_name))
 
                 CImGui.NextColumn()
                 CImGui.PushItemWidth(-1)
                 
-                CImGui.Text("value: " * string(value))
+                if field_name==:brain 
+                    val_string = "BRAIN"
+                else
+                    val_string = string(getproperty(aAgent, field_name))
+                end
+                CImGui.Text("value: " * val_string)
 
                 CImGui.PopItemWidth()
                 CImGui.NextColumn()

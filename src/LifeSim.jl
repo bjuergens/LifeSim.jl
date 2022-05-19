@@ -6,6 +6,7 @@ module LifeSim
     export main
 
     include("lin.jl")
+    include("neural.jl")
     include("models.jl")
     include("simulation.jl")
     include("gui.jl")
