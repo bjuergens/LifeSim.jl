@@ -37,14 +37,8 @@ module LSLin
 
     "if value is outside interval, set to border"
     function clip(value::Number, start::Number, width::Number)
-        
-        if value > start+width
-            return  start+width
-        end
-
-        if value < start
-            return start
-        end
+        value = max(start, value)
+        value = min(start+width, value)
         return value
     end
 
