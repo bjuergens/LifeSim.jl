@@ -1,7 +1,9 @@
 
 if abspath(PROGRAM_FILE) == @__FILE__
     include("lin.jl") 
+    include("neural.jl") 
     include("models.jl") 
+    include("evolution.jl") 
 end
 
 module LSSimulation
@@ -11,6 +13,7 @@ module LSSimulation
     using Revise
     using ..LSModels
     using ..LSLin
+    using ..LSEvolution
 
     using CImGui: IM_COL32
     using Distances: Euclidean
@@ -88,28 +91,6 @@ module LSSimulation
         return sorted
     end
 
-
-    function myrand()
-        return rand()^2
-    end
-    function randdiff(input)
-        # return input * (1.1 - rand()^2 )
-        return rand(Normal(input, 0.1), 1)[1]
-    end
-    # todo: extra module for evo-stuff
-    function mutate(aAgent::Agent, next_agent_id)
-        
-        parent_genome = aAgent.brain.genome
-        @show parent_genome
-        # rand(Normal(input, 0.1), 1)
-
-        return Agent(next_agent_id,
-                        pos=Vec2(randdiff(aAgent.pos.x), randdiff(aAgent.pos.y)),
-                        direction_angle=randdiff(aAgent.direction_angle), 
-                        size=clip(randdiff(aAgent.size),0.01,0.05), 
-                        speed=randdiff(aAgent.speed), 
-                        color=abs(floor(randdiff(aAgent.color))))
-    end
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState, next_agent_id)
         agent_list_individually::Vector{Agent} = []
