@@ -13,6 +13,7 @@ module LSSimulation
     using ..LSModels
     using ..LSLin
     using ..LSEvolution
+    using ..LSNaturalNet
 
     using CImGui: IM_COL32
     using Distances: Euclidean
@@ -22,7 +23,8 @@ module LSSimulation
     using StatsBase: counteq # für genetische distanz, wobei es da noch viele andere metriken in der lib gibt
 
     using Distributions: Normal # too slow!!
-
+    using Flatten
+    using StaticArrays
 
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
@@ -48,15 +50,25 @@ module LSSimulation
     end
 
         
+    function agent_think_with_brain(aAgent::Agent, input::SensorInput)
+        brain = aAgent.brain
+        input_data = flatten(input)
+        input_vector =  SVector{length(input_data),Float32}(input_data)
+        @show typeof(input_vector) typeof(brain.neural_state[])
+        @show step!(brain, input_vector)
+    end
+
     function makeSensorInput(aAgent)
         # direction-angle points east because that's where the x-axis is
-        compass_north = aAgent.direction_angle + pi/2 
-        
+        compass_north  = aAgent.direction_angle + pi/2 
         compass_center = aAgent.direction_angle - direction(aAgent.pos, WORLD_CENTER)
 
         return SensorInput(
             wrap(compass_north ,0, 2pi), 
-            wrap(compass_center,0, 2pi))
+            wrap(compass_center,0, 2pi), 
+            aAgent.speed, 
+            aAgent.pos
+            )
     end
 
     function agent_think(input::SensorInput)
@@ -66,9 +78,9 @@ module LSSimulation
         else
             rotate_desire  =-1.0 
         end
-
         return Desire(rotate_desire, move_desire)
     end
+
 
     function cull!(agent_list::Vector{Agent}, num::Int)
         if length(agent_list) < num
@@ -101,6 +113,7 @@ module LSSimulation
             agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
             
             sensor = makeSensorInput(agent)
+            desire2 = agent_think_with_brain(agent, sensor)
             desire = agent_think(sensor)
 
             rotation = desire.rotate * MAX_ROTATE  
@@ -248,10 +261,26 @@ using ..LSModelExamples
 using ..LSModels
 using ..LSLin
 using ..LSSimulation:cull!
+using ..LSNaturalNet
+using CImGui: IM_COL32
 
 function run_headless(max_time)
+
+    # todo: extract to method, because DRY
     test_ctrlState = ControlState()
-    test_simState = deepcopy(simState)
+    num_agents = 2
+    agent_list = []
+    for i in 1:num_agents
+        color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
+        pos = Vec2(0.9*i/num_agents, 0.9*i/num_agents)
+        brain = init_random_network(num_sensors, 10, num_intentions)
+        new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.05, color=color)   
+        push!(agent_list,new_agent)
+    end
+
+    test_simState = SimulationState(SimulationStep(agent_list= agent_list))
+
+    # test_simState = deepcopy(simState)
     ctrlThread = Threads.@spawn begin
         sleep(max_time) 
         test_ctrlState.is_stop = true
@@ -301,7 +330,7 @@ function doTest()
 
         cull!_res = cull!([aAgent,bAgent],1)
 
-        @test run_headless(1.5) > 3
+        @test run_headless(3.0) > 2
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)

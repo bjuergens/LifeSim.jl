@@ -51,7 +51,12 @@ module LSEvolutionTest
 export doTest
 using ..LSEvolution
 using ..LSModelExamples
+using ..LSEvolution
+using ..LSModels
+using ..LSNaturalNet
 using Test
+using Flatten
+using StaticArrays
 
 function doTest()
 
@@ -61,11 +66,29 @@ function doTest()
     @inferred mutate(aAgent,1)
     @inferred LSEvolution.randdiff(123)
 
-    parent = aAgent
+    brain = init_random_network(num_sensors, 10, num_intentions)
+    parent = Agent(1, brain, pos=Vec2(0.3,0.3), direction_angle=0, speed=0.02, size=0.05, color=0xff224466)   
+
     child = mutate(parent,3)
     
     @test !(child.pos ≈ parent.pos)
     @test !(child.color ≈ parent.color)
+    @test length(child.brain.neural_state[]) == length(parent.brain.neural_state[])
+    @test length(child.brain.V) == length(parent.brain.V)
+    
+    # todo: move this to convert method
+    some_input = SensorInput(1,2,3,Vec2(4,5))
+    input_data = flatten(some_input)
+    input_vector =  SVector{length(input_data),Float32}(input_data)
+
+    parent_desire = step!(parent.brain, input_vector)
+    child_desire = step!(child.brain, input_vector)
+
+    @test length(parent_desire) == length(child_desire)
+    
+    @test length(child.brain.neural_state[]) == length(parent.brain.neural_state[])
+    @test length(child.brain.V) == length(parent.brain.V)
+
 end
 
 

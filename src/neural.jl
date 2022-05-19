@@ -5,7 +5,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSNaturalNet
-export NaturalNet, genome_size, step!, init_random_network
+export NaturalNet, genome_size, step!, init_random_network, agent_think_with_brain
 using StaticArrays
 # using LinearAlgebra
 
@@ -55,6 +55,7 @@ function step!(ctrnn::NaturalNet, input::SVector)
     output = max.(0, ctrnn.neural_state[]' * ctrnn.T)
     return output
 end
+
 
 end #module
 
