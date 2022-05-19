@@ -43,7 +43,6 @@ end
 function init_random_network(dim_in, dim_N, dim_out)
     rand_genome_size = genome_size(dim_in,dim_N,dim_out)
     rand_genome2 = randn((SVector){rand_genome_size, Float32})
-    @show rand_genome2
     return NaturalNet(rand_genome2, input_dim=dim_in, neural_dim=dim_N, output_dim=dim_out)
 end
 
