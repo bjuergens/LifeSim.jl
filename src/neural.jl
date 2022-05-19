@@ -31,7 +31,7 @@ struct NaturalNet{dim_in,dim_N,dim_out,precision<:AbstractFloat}
         , SMatrix( reshape(genome[1:input_dim*neural_dim]                                                                     , Size(input_dim,neural_dim)))
         , SMatrix( reshape(genome[input_dim*neural_dim+1:input_dim*neural_dim+neural_dim^2]                                   , Size(neural_dim,neural_dim)))
         , SMatrix( reshape(genome[input_dim*neural_dim+neural_dim^2+1:input_dim*neural_dim+neural_dim^2+neural_dim*output_dim], Size(neural_dim,output_dim)))
-        , @SVector zeros(genome_size(input_dim,neural_dim,output_dim))
+        , genome
         , delta_t
         )
 end #struct
@@ -43,6 +43,7 @@ end
 function init_random_network(dim_in, dim_N, dim_out)
     rand_genome_size = genome_size(dim_in,dim_N,dim_out)
     rand_genome2 = randn((SVector){rand_genome_size, Float32})
+    @show rand_genome2
     return NaturalNet(rand_genome2, input_dim=dim_in, neural_dim=dim_N, output_dim=dim_out)
 end
 
