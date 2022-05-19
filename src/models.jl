@@ -5,12 +5,23 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSModels
-export Agent, SensorData
+
+export Agent, SensorData, split_color
 export SimulationState, ControlState, SimulationStep, Vec2
 
 using CImGui: IM_COL32
 using ..LSLin
 using ..LSNaturalNet
+
+"helper that separates CImGui-Color into its components"
+function split_color(color::UInt32)
+    red   = color & 0x000000ff
+    green = (color & 0x0000ff00) >> 8
+    blue  = (color & 0x00ff0000) >> 16
+    alpha = (color & 0xff000000) >> 24
+    return red, green, blue, alpha
+end
+
 
 "a single individual in sim"
 mutable struct Agent
@@ -80,10 +91,10 @@ end #module MyModelExamples
 module ModelTests
 export doTest
 using Test
+using Flatten
+using CImGui: IM_COL32
 using ..LSModels
 using ..LSModelExamples
-
-using Flatten
 
 
 
@@ -95,6 +106,11 @@ function doTest()
     @test !ControlState().is_stop
     @test 1+1==2  # canary
 
+    (r,g,b,a) = split_color(IM_COL32(1,2,3,4))
+    @test r == 1
+    @test g == 2
+    @test b == 3
+    @test a == 4
 
 end
 end
