@@ -13,6 +13,7 @@ export SensorInput, Desire, num_sensors, num_intentions # use to init brains for
 
 
 using CImGui: IM_COL32
+using StaticArrays
 using ..LSLin
 using ..LSNaturalNet
 
@@ -32,6 +33,7 @@ struct SensorInput
     speed::Cfloat
     pos::Vec2
 end
+
 struct Desire
     rotate::Cfloat ## relative desired rotation, in [-1,1]
     accelerate::Cfloat ## change speed [-1,1]
@@ -114,7 +116,7 @@ using Flatten
 using CImGui: IM_COL32
 using ..LSModels
 using ..LSModelExamples
-
+using StaticArrays
 
 
 function doTest()
@@ -130,6 +132,11 @@ function doTest()
     @test g == 2
     @test b == 3
     @test a == 4
+
+    # WIP
+    some_input = SensorInput(1,2,3,Vec2(4,5))
+    #after_convert = convert(SVector, some_input)
+    #@test after_convert == (1,2,3,4,5)
 
 end
 end
