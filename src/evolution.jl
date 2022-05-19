@@ -85,7 +85,6 @@ function doTest()
     child_desire = step!(child.brain, input_vector)
 
     @test length(parent_desire) == length(child_desire)
-    
     @test length(child.brain.neural_state[]) == length(parent.brain.neural_state[])
     @test length(child.brain.V) == length(parent.brain.V)
 
