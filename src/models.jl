@@ -9,6 +9,9 @@ module LSModels
 export Agent, SensorData, split_color
 export SimulationState, ControlState, SimulationStep, Vec2
 
+export SensorInput, Desire, num_sensors, num_intentions # use to init brains for initial population
+
+
 using CImGui: IM_COL32
 using ..LSLin
 using ..LSNaturalNet
@@ -21,6 +24,20 @@ function split_color(color::UInt32)
     alpha = (color & 0xff000000) >> 24
     return red, green, blue, alpha
 end
+
+
+struct SensorInput
+    compass_north::Cfloat ## direction to y-axis with respect to current direction
+    compass_center::Cfloat ## direction to world middle with respect to current direction
+end
+struct Desire
+    rotate::Cfloat ## relative desired rotation, in [-1,1]
+    accelerate::Cfloat ## change speed [-1,1]
+end
+# todo generate from struct
+num_sensors = 2
+num_intentions = 2
+
 
 
 "a single individual in sim"

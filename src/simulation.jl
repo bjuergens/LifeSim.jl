@@ -8,7 +8,6 @@ end
 
 module LSSimulation
     export simulationLoop!, lk_sim, lk_ctrl
-    export num_sensors, num_intentions # use to init brains for initial population
 
     using Revise
     using ..LSModels
@@ -48,10 +47,6 @@ module LSSimulation
         agent2.pos = agent2.pos - (move_vec * ratio)
     end
 
-    struct SensorInput
-        compass_north::Cfloat ## direction to y-axis with respect to current direction
-        compass_center::Cfloat ## direction to world middle with respect to current direction
-    end
         
     function makeSensorInput(aAgent)
         # direction-angle points east because that's where the x-axis is
@@ -64,19 +59,15 @@ module LSSimulation
             wrap(compass_center,0, 2pi))
     end
 
-    struct ActionIntention
-        rotate::Cfloat ## relative desired rotation, in [-1,1]
-    end
-    # todo generate from struct
-    num_sensors = 2
-    num_intentions = 1
-
     function agent_think(input::SensorInput)
+        move_desire = 1.0
         if input.compass_center > pi
-            return ActionIntention(1.0)
+            rotate_desire = 1.0
         else
-            return ActionIntention(-1.0)
+            rotate_desire  =-1.0 
         end
+
+        return Desire(rotate_desire, move_desire)
     end
 
     function cull!(agent_list::Vector{Agent}, num::Int)
@@ -249,7 +240,7 @@ module LSSimulation
     end
 end
 
-module SimTests
+module LSSimulationTests
 export doTest
 using Test
 using ..LSSimulation
@@ -310,7 +301,7 @@ function doTest()
 
         cull!_res = cull!([aAgent,bAgent],1)
 
-        @test run_headless(1.5) > 5
+        @test run_headless(1.5) > 3
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)
@@ -332,7 +323,7 @@ end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .SimTests
+    using .LSSimulationTests
     using .LSModelExamples
     using .LSSimulation
     doTest()
