@@ -116,8 +116,8 @@ module LSSimulation
             
             sensor = makeSensorInput(agent)
             desire = agent_think_with_brain(agent, sensor)
-            desire2 = agent_think(sensor)
-
+            # desire2 = agent_think(sensor)
+            # @show desire
             # @show desire.accelerate
             accel = desire.accelerate * MAX_ACCELLERATE
             speed = clip( agent.speed + accel, 0, MAX_SPEED )
