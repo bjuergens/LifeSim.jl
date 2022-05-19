@@ -52,7 +52,7 @@ function step!(ctrnn::NaturalNet, input::SVector)
     input_with_V = tanh.(input)' * ctrnn.V
     dydt = (ctrnn.neural_state[]' * ctrnn.W) + ( input_with_V )
     ctrnn.neural_state[] = ctrnn.neural_state[]' + ctrnn.delta_t * dydt
-    output = max.(0, ctrnn.neural_state[]' * ctrnn.T)
+    output = tanh.(ctrnn.neural_state[]' * ctrnn.T)
     return output
 end
 
