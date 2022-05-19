@@ -106,7 +106,7 @@ module LSSimulation
 
             if is_pushing_agents
                 # @info "blubb"
-                pos_new = move_in_direction(pos_new, -direction(agent.pos, WORLD_CENTER), 0.1)
+                pos_new = move_in_direction(pos_new, -direction(agent.pos, WORLD_CENTER), 0.03)
             end
 
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
