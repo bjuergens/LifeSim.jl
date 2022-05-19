@@ -53,7 +53,7 @@ mutable struct ControlState
     request_play::Int
     request_add_agent::Int
 
-    ControlState(; is_stop=false, min_frame_time=100, cull_minimum=5, cull_frequency=100, cull_ratio=0.3, 
+    ControlState(; is_stop=false, min_frame_time=100, cull_minimum=20, cull_frequency=100, cull_ratio=0.3, 
             request_revise=1,request_pause=1, request_play=1,request_add_agent=1) =
         new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_ratio,
             request_revise,  request_pause,   request_play,  request_add_agent)

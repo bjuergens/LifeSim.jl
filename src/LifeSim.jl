@@ -16,6 +16,10 @@ module LifeSim
     using .LSGui
     using .LSSimulation
     using .LSModelExamples
+    using .LSNaturalNet
+    
+
+    using CImGui: IM_COL32
 
     function update_from_gui!(ctrl_state_to_sim::Ref{ControlState}, ctrl_state_from_gui::Ref{ControlState})
         lock(lk_ctrl)
@@ -57,12 +61,21 @@ module LifeSim
     function main()
 
         @info "running gui with some dummy-data for debugging..."
-
         ctrl_state_from_gui = ControlState()
         ref_ctrl_state_from_gui = Ref(ctrl_state_from_gui)
         ref_ctrl_state_to_simulation = Ref(ctrl_state_from_gui)
 
-        sim_state_from_sim = simState
+        num_agents = ctrl_state_from_gui.cull_minimum
+        agent_list = []
+        for i in 1:num_agents
+            color = IM_COL32(floor(i*255/num_agents),floor(i*255/num_agents),0,255)
+            pos = Vec2(0.9*i/num_agents, 0.9*i/num_agents)
+            brain = init_random_network(num_sensors, 10, num_intentions)
+            new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.05, color=color)   
+            push!(agent_list,new_agent)
+        end
+
+        sim_state_from_sim = SimulationState(SimulationStep(agent_list= agent_list))
         ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
         ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 
@@ -86,7 +99,7 @@ module LifeSim
         wait(workThread)
 
         @info "num simulation steps " ref_sim_state_to_simulation[].last_step[].num_step
-        @info "final sim state " ref_sim_state_to_simulation[]
+        
     end
 end
 

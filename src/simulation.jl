@@ -6,6 +6,7 @@ end
 
 module LSSimulation
     export simulationLoop!, lk_sim, lk_ctrl
+    export num_sensors, num_intentions # use to init brains for initial population
 
     using Revise
     using ..LSModels
@@ -63,6 +64,9 @@ module LSSimulation
     struct ActionIntention
         rotate::Cfloat ## relative desired rotation, in [-1,1]
     end
+    # todo generate from struct
+    num_sensors = 2
+    num_intentions = 1
 
     function agent_think(input::SensorInput)
         if input.compass_center > pi
