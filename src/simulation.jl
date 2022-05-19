@@ -270,23 +270,27 @@ using ..LSSimulation:cull!
 using ..LSNaturalNet
 using CImGui: IM_COL32
 
-function run_headless(max_time)
+function initial_sim_state(;num_hidden=10,num_agents = 2,test_ctrlState = ControlState())
 
-    # todo: extract to method, because DRY
-    test_ctrlState = ControlState()
     num_agents = 2
     agent_list = []
     for i in 1:num_agents
         color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
-        pos = Vec2(0.9*i/num_agents, 0.9*i/num_agents)
-        brain = init_random_network(num_sensors, 10, num_intentions)
+        pos = Vec2(0.9*i/(num_agents+1), 0.9*i/(num_agents+1))
+        brain = init_random_network(num_sensors, num_hidden, num_intentions)
         new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.05, color=color)   
         push!(agent_list,new_agent)
     end
 
-    test_simState = SimulationState(SimulationStep(agent_list= agent_list))
+    return SimulationState(SimulationStep(agent_list= agent_list))
+end
 
+function run_headless(max_time)
+
+    # todo: extract to method, because DRY
     # test_simState = deepcopy(simState)
+    test_ctrlState = ControlState()
+    test_simState = initial_sim_state()
     ctrlThread = Threads.@spawn begin
         sleep(max_time) 
         test_ctrlState.is_stop = true
@@ -298,7 +302,7 @@ end
 
 function applyMakeSensor(pos, dir)
     
-    tAgent1 = deepcopy(aAgent)
+    tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
     tAgent1.pos = pos
     tAgent1.direction_angle = dir
     result = LSSimulation.makeSensorInput(tAgent1)
@@ -307,12 +311,9 @@ function applyMakeSensor(pos, dir)
 end
 
 function test_collision(pos1, pos2, size1, size2)
-    tAgent1 = deepcopy(aAgent)
-    tAgent2 = deepcopy(bAgent)
-    tAgent1.pos = pos1
-    tAgent2.pos = pos2
-    tAgent1.size = size1
-    tAgent2.size = size2
+
+    tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=pos1, size=size1)  
+    tAgent2 = Agent(2, init_random_network(2, 3, 4), pos=pos2, size=size2)
     pre_dist = distance(tAgent1.pos, tAgent2.pos)
     LSSimulation.collision(tAgent1, tAgent2)
 
@@ -334,7 +335,10 @@ function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
 
-        cull!_res = cull!([aAgent,bAgent],1)
+        test_simState_dummy = initial_sim_state()
+        agent_list = test_simState_dummy.last_step[].agent_list
+        cull!_res = cull!(agent_list,1)
+        
 
         @test run_headless(3.0) > 2
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)

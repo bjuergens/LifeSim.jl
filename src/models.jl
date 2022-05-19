@@ -53,7 +53,7 @@ mutable struct Agent
     speed::Cfloat
     size::Cfloat
     color::UInt32
-    Agent(idx, brain=NaturalNet(); pos=Vec2(0.3, 0.3), direction_angle=0.1, speed=0.1, size=0.1, color=255) = 
+    Agent(idx, brain; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.1, color=0xff112233) = 
       new(idx, brain, pos,                direction_angle,     speed,     size,      color)
 end
 
@@ -102,10 +102,8 @@ using ..LSModels
 using ..LSNaturalNet
 using CImGui: IM_COL32
 # aAgent = Agent(1, pos=Vec2(0.3, 0.3), direction_angle= pi/2, speed=0.01, size=0.11, color=IM_COL32(11,11,0,255),1)
-aAgent = Agent(1)
-bAgent = Agent(2, pos=Vec2(0.6, 0.6), direction_angle=2*pi,  speed=0.02, size=0.13, color=IM_COL32(22,22,0,255))   
 # stepStep = SimulationStep(agent_list= [aAgent, bAgent])
-simState = SimulationState(SimulationStep(agent_list= [aAgent, bAgent]))
+simState = SimulationState(SimulationStep(agent_list= []))
 end #module MyModelExamples
 
 
@@ -123,7 +121,6 @@ function doTest()
 @testset "Examples" begin
     # @info "ModelExamples" aAgent bAgent simState
 
-    @test 0<aAgent.pos.x<1
     @test !ControlState().is_stop
     @test 1+1==2  # canary
 
