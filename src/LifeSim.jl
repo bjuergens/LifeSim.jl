@@ -18,6 +18,7 @@ module LifeSim
     using .LSSimulation
     using .LSModelExamples
     using .LSNaturalNet
+    using .LSEvolution
     
 
     using CImGui: IM_COL32
