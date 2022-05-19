@@ -24,9 +24,9 @@ struct NaturalNet{dim_in,dim_N,dim_out,precision<:AbstractFloat}
         , @SMatrix zeros(neural_dim,neural_dim)
         , @SMatrix zeros(neural_dim,output_dim)
         , @SVector zeros(genome_size(input_dim,neural_dim,output_dim))
-        , 0.1
+        , 0.01
         )
-    NaturalNet(genome::SVector;input_dim=2, neural_dim=2, output_dim=2, delta_t=0.1) = new{input_dim,neural_dim,output_dim,Float32}(
+    NaturalNet(genome::SVector;input_dim=2, neural_dim=2, output_dim=2, delta_t=0.01) = new{input_dim,neural_dim,output_dim,Float32}(
         Ref(SVector{neural_dim,Float32}(zeros(neural_dim)))
         , SMatrix( reshape(genome[1:input_dim*neural_dim]                                                                     , Size(input_dim,neural_dim)))
         , SMatrix( reshape(genome[input_dim*neural_dim+1:input_dim*neural_dim+neural_dim^2]                                   , Size(neural_dim,neural_dim)))
@@ -42,18 +42,15 @@ function genome_size(dim_in::Int,dim_N::Int,dim_out::Int)
 end
 
 function step!(ctrnn::NaturalNet, input::SVector)
-
     net_dim_in,net_dim_N,net_dim_out,net_precision = typeof(ctrnn).parameters
     ns_data, ns_prec, ns_dim1, ns_dim2 = typeof(ctrnn.neural_state[]).parameters
     @assert ns_dim2 == net_dim_N
     @assert ns_prec == net_precision
-    input_after_actiation = tanh.(input)
-    dydt = (ctrnn.neural_state[]' * ctrnn.W) + ( input_after_actiation' * ctrnn.V )
-    ctrnn.neural_state[] = ctrnn.neural_state[]' + ctrnn.delta_t * dydt
-    out = ctrnn.neural_state[]' * ctrnn.T
 
-    out_after_relu = max.(0, out)
-    return out_after_relu
+    dydt = (ctrnn.neural_state[]' * ctrnn.W) + ( tanh.(input)' * ctrnn.V )
+    ctrnn.neural_state[] = ctrnn.neural_state[]' + ctrnn.delta_t * dydt
+    output = max.(0, ctrnn.neural_state[]' * ctrnn.T)
+    return output
 end
 
 end #module
