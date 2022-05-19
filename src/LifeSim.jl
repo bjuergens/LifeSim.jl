@@ -73,7 +73,7 @@ module LifeSim
             color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
             pos = Vec2(0.9*i/num_agents, 0.9*i/num_agents)
             brain = init_random_network(num_sensors, 10, num_intentions)
-            new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.05, color=color)   
+            new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.02, color=color)   
             push!(agent_list,new_agent)
         end
 
