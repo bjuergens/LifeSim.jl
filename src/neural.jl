@@ -5,7 +5,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSNaturalNet
-export NaturalNet, genome_size
+export NaturalNet, genome_size, step!
 using StaticArrays
 # using LinearAlgebra
 
@@ -15,6 +15,7 @@ struct NaturalNet{dim_in,dim_N,dim_out,precision<:AbstractFloat}
     W::SMatrix{dim_N , dim_N  , precision}
     T::SMatrix{dim_N , dim_out, precision}
     genome::SVector
+    delta_t::precision
 
     "create dummy object with zero values"
     NaturalNet(;input_dim=2, neural_dim=4, output_dim=3) = new{input_dim,neural_dim,output_dim,Float32}(
@@ -23,19 +24,38 @@ struct NaturalNet{dim_in,dim_N,dim_out,precision<:AbstractFloat}
         , @SMatrix zeros(neural_dim,neural_dim)
         , @SMatrix zeros(neural_dim,output_dim)
         , @SVector zeros(genome_size(input_dim,neural_dim,output_dim))
+        , 0.1
         )
-    NaturalNet(genome::SVector;input_dim=2, neural_dim=2, output_dim=2) = new{input_dim,neural_dim,output_dim,Float32}(
+    NaturalNet(genome::SVector;input_dim=2, neural_dim=2, output_dim=2, delta_t=0.1) = new{input_dim,neural_dim,output_dim,Float32}(
         Ref(SVector{neural_dim,Float32}(zeros(neural_dim)))
         , SMatrix( reshape(genome[1:input_dim*neural_dim]                                                                     , Size(input_dim,neural_dim)))
         , SMatrix( reshape(genome[input_dim*neural_dim+1:input_dim*neural_dim+neural_dim^2]                                   , Size(neural_dim,neural_dim)))
         , SMatrix( reshape(genome[input_dim*neural_dim+neural_dim^2+1:input_dim*neural_dim+neural_dim^2+neural_dim*output_dim], Size(neural_dim,output_dim)))
         , @SVector zeros(genome_size(input_dim,neural_dim,output_dim))
+        , delta_t
         )
 end #struct
 
+# todo: get genome size from type
 function genome_size(dim_in::Int,dim_N::Int,dim_out::Int)
     return dim_in*dim_N + dim_N*dim_N + dim_N*dim_out
 end
+
+function step!(ctrnn::NaturalNet, input::SVector)
+
+    net_dim_in,net_dim_N,net_dim_out,net_precision = typeof(ctrnn).parameters
+    ns_data, ns_prec, ns_dim1, ns_dim2 = typeof(ctrnn.neural_state[]).parameters
+    @assert ns_dim2 == net_dim_N
+    @assert ns_prec == net_precision
+    input_after_actiation = tanh.(input)
+    dydt = (ctrnn.neural_state[]' * ctrnn.W) + ( input_after_actiation' * ctrnn.V )
+    ctrnn.neural_state[] = ctrnn.neural_state[]' + ctrnn.delta_t * dydt
+    out = ctrnn.neural_state[]' * ctrnn.T
+
+    out_after_relu = max.(0, out)
+    return out_after_relu
+end
+
 end #module
 
 
@@ -80,6 +100,15 @@ function doTest()
     @test test_net2.W == reshape( 7:15 , (3,3))    
     @test test_net2.T == reshape( 16:27, (3,4))
     @test 1+1==2  # canary
+
+    # an update step produces non-zero output and updates the neural state
+    test_input = SVector{2,Float32}(1:2)
+    old_state = deepcopy( test_net2.neural_state[])
+    @test old_state == test_net2.neural_state[]
+    output = step!(test_net2, test_input)
+    @test old_state != test_net2.neural_state[]
+    @test all(output .!= zeros(4,1))
+    @test ndims(output) == ndims(zeros(4,1))
 end
 end
 end #module NaturalNetTests
