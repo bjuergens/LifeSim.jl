@@ -35,7 +35,9 @@ module LSSimulation
     WORLD_CENTER = Vec2(0.5,0.5)
 
     # MAX_ROTATE = 0.05 # max rotation in rad per timestep
-    MAX_ROTATE = 0.15 # max rotation in rad per timestep
+    MAX_ROTATE = 0.25 # max rotation in rad per timestep
+    MAX_ACCELLERATE = 0.001
+    MAX_SPEED = 0.01
 
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
@@ -54,8 +56,8 @@ module LSSimulation
         brain = aAgent.brain
         input_data = flatten(input)
         input_vector =  SVector{length(input_data),Float32}(input_data)
-        # @show typeof(input_vector) typeof(brain.neural_state[])
-        # @show step!(brain, input_vector)
+        desire_data = step!(brain, input_vector)    
+        return Desire(desire_data[1], desire_data[2])
     end
 
     function makeSensorInput(aAgent)
@@ -113,15 +115,20 @@ module LSSimulation
             agent_pos_y::Cfloat = clip(pos_new.y, agent.size, 1.0 - 2agent.size) # todo: fix stackoverflow that occurs when this is not explicitly typed. 
             
             sensor = makeSensorInput(agent)
-            desire2 = agent_think_with_brain(agent, sensor)
-            desire = agent_think(sensor)
+            desire = agent_think_with_brain(agent, sensor)
+            desire2 = agent_think(sensor)
 
+            # @show desire.accelerate
+            accel = desire.accelerate * MAX_ACCELLERATE
+            speed = clip( agent.speed + accel, 0, MAX_SPEED )
+
+            # @show speed accel desire.accelerate
             rotation = desire.rotate * MAX_ROTATE  
-            a_direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
+            direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
             agent_updated =  Agent(agent.id, agent.brain, 
                                 pos=Vec2(agent_pos_x, agent_pos_y), 
-                                direction_angle=a_direction_angle, 
-                                speed=agent.speed,
+                                direction_angle=direction_angle, 
+                                speed=speed,
                                 size= agent.size,
                                 color= agent.color)
             push!(agent_list_individually, agent_updated)
@@ -278,7 +285,7 @@ function initial_sim_state(;num_hidden=10,num_agents = 2,test_ctrlState = Contro
         color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
         pos = Vec2(0.9*i/(num_agents+1), 0.9*i/(num_agents+1))
         brain = init_random_network(num_sensors, num_hidden, num_intentions)
-        new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.05, color=color)   
+        new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.01, size=0.05, color=color)   
         push!(agent_list,new_agent)
     end
 

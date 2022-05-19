@@ -18,6 +18,8 @@ using CImGui: IM_COL32
     end
 
     function mutate(parent::Agent, next_agent_id, σ=0.01)
+
+        # todo: clip all genes
         net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
         parent_genome = parent.brain.genome
         pertube = rand(Normal(0,σ), length(parent_genome))
@@ -26,8 +28,7 @@ using CImGui: IM_COL32
         # todo: children are smaller at birth and grow overtime
         child_size = parent.size 
         child_direction = -parent.direction_angle
-        # todo: children start with 0 speed and it changes via actions
-        child_speed = randdiff(parent.speed) 
+        child_speed = 0
         child_pos = move_in_direction( parent.pos, -parent.direction_angle, child_size + parent.size )
         p_r, p_g, p_b, p_a = split_color(parent.color)
         c_r = wrap(p_r+11,0, 255)
