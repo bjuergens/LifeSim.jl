@@ -24,6 +24,7 @@ using CImGui: IM_COL32
         parent_genome = parent.brain.genome
         pertube = rand(Normal(0,σ), length(parent_genome))
         child_genome = pertube + parent_genome
+        wrap.(child_genome, -10, 20)
         child_brain = NaturalNet(child_genome, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.01)
         # todo: children are smaller at birth and grow overtime
         child_size = parent.size 
@@ -64,6 +65,7 @@ function doTest()
 @testset "LSEvolutionTesT" begin
     @test 1+1≈2 #canary
 
+    aAgent = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
     @inferred mutate(aAgent,1)
     @inferred LSEvolution.randdiff(123)
 
