@@ -86,13 +86,6 @@ using ..LSModelExamples
 using Flatten
 
 
-@generated function test4(p::Agent) where P
-    assignments = [
-        :( @show p.$name ) for name in fieldnames(Agent)
-    ]
-    quote $(assignments...) end
-end
-
 
 function doTest()
 @testset "Examples" begin
@@ -102,20 +95,6 @@ function doTest()
     @test !ControlState().is_stop
     @test 1+1==2  # canary
 
-    agent_fields = fieldnameflatten(aAgent)
-    agent_values = flatten(aAgent)
-
-    T = typeof(aAgent)
-    for (name, typ) in zip(fieldnames(T), T.types)
-        if name==:brain 
-            println("QQQQQQQQQQQQQQQQ")
-        else
-            println("type of the fieldname $name is $typ")
-        end
-        @show getproperty(aAgent, name)
-    end
-
-    # test4(bAgent)
 
 end
 end
