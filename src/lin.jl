@@ -71,14 +71,6 @@ module LSLin
         return x/width
     end
 
-    function write_stack()
-        res = []
-        for a in stacktrace()
-            push!(res, a)
-        end
-        return res
-    end
-
     "return angle between vector and y-axis"
     function angle_to_y_axis(p::Vec2)
         if -Ɛ < p.x < Ɛ && -Ɛ < p.y < Ɛ
