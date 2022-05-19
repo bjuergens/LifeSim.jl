@@ -54,8 +54,8 @@ module LSSimulation
         brain = aAgent.brain
         input_data = flatten(input)
         input_vector =  SVector{length(input_data),Float32}(input_data)
-        @show typeof(input_vector) typeof(brain.neural_state[])
-        @show step!(brain, input_vector)
+        # @show typeof(input_vector) typeof(brain.neural_state[])
+        # @show step!(brain, input_vector)
     end
 
     function makeSensorInput(aAgent)
@@ -118,8 +118,13 @@ module LSSimulation
 
             rotation = desire.rotate * MAX_ROTATE  
             a_direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
-
-            push!(agent_list_individually, Agent(agent.id, pos=Vec2(agent_pos_x, agent_pos_y), direction_angle=a_direction_angle, speed=agent.speed ,size= agent.size,color= agent.color))
+            agent_updated =  Agent(agent.id, agent.brain, 
+                                pos=Vec2(agent_pos_x, agent_pos_y), 
+                                direction_angle=a_direction_angle, 
+                                speed=agent.speed,
+                                size= agent.size,
+                                color= agent.color)
+            push!(agent_list_individually, agent_updated)
         end
 
         for (agent1, agent2) in combinations(agent_list_individually, 2)
@@ -171,8 +176,9 @@ module LSSimulation
         end
 
         if add_agent_in_this_step_request
-            push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
-            next_agent_id+=1
+            @warn "not implemented"
+            # push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
+            # next_agent_id+=1
         end
 
         # second part: perform meta-tasks around simulation step
