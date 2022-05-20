@@ -37,6 +37,8 @@ module LSSimulation
     MAX_ROTATE = 0.25 # max rotation in rad per timestep
     MAX_ACCELLERATE = 0.001
     MAX_SPEED = 0.01
+    ENERGY_LOSS_BASE = 0.0001 # energy loss per timestep
+    ENERGY_LOSS_PER_SPEED = 0.1 # energy loss per timestep multiplied with speed
 
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
@@ -125,7 +127,7 @@ module LSSimulation
             # @show desire.accelerate
             accel = desire.accelerate * MAX_ACCELLERATE
             speed = clamp( agent.speed + accel, -MAX_SPEED/2, MAX_SPEED )
-
+            energy = agent.energy - ENERGY_LOSS_BASE - (speed*ENERGY_LOSS_PER_SPEED)
             # @show speed accel desire.accelerate
             rotation = desire.rotate * MAX_ROTATE  
             direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)    
@@ -133,7 +135,8 @@ module LSSimulation
             agent_updated =  Agent(agent, 
                                 pos=Vec2(agent_pos_x, agent_pos_y), 
                                 direction_angle=direction_angle, 
-                                speed=speed)
+                                speed=speed,
+                                energy=energy)
             push!(agent_list_ref, Ref(agent_updated))
         end
 
@@ -152,11 +155,13 @@ module LSSimulation
                 agent1_ref=Ref(Agent(agent1, 
                                         pos=pos1, 
                                         direction_angle=agent1.direction_angle, 
-                                        speed=agent1.speed))
+                                        speed=agent1.speed, 
+                                        energy=agent1.energy))
                 agent2_ref=Ref(Agent(agent2, 
                                         pos=pos2, 
                                         direction_angle=agent2.direction_angle, 
-                                        speed=agent2.speed))
+                                        speed=agent2.speed,
+                                        energy=agent1.energy))
             end
         end
         for i in 1:1

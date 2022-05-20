@@ -54,13 +54,14 @@ struct Agent
     color::UInt32
     direction_angle:: Cfloat
     speed::Cfloat
+    energy::Cfloat
     # constructor for new agents
-    Agent(idx, brain; pos=Vec2(0.3, 0.3), mutation_rate=0.02, size=0.1, color=0xff112233, direction_angle=0.0, speed=0.0) = 
-      new(idx, brain, pos               , mutation_rate     , size,     color, direction_angle,     speed)
+    Agent(idx, brain; pos, mutation_rate=0.02, size=0.1, color=0xff112233, direction_angle=0.0, speed=0.0, energy=1.0) = 
+      new(idx, brain, pos               , mutation_rate     , size,     color,            direction_angle,     speed,     energy)
 
     # constructor for updates
-    Agent(old::Agent; pos=Vec2(0.3, 0.3),  direction_angle, speed) = 
-      new(old.id, old.brain, pos, old.mutation_rate, old.size, old.color, direction_angle, speed)
+    Agent(old::Agent; pos,  direction_angle, speed, energy) = 
+      new(old.id, old.brain, pos, old.mutation_rate, old.size, old.color, direction_angle, speed, energy)
     
 end
 
