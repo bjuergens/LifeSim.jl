@@ -118,7 +118,7 @@ simState = SimulationState(SimulationStep(agent_list= []))
 end #module MyModelExamples
 
 
-module ModelTests
+module LSModelTests
 export doTest
 using Test
 using Flatten

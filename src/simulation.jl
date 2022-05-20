@@ -300,9 +300,9 @@ module LSSimulation
             end
 
             if hotloading
-                simStep = Base.invokelatest(doSimulationStep,last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+                simStep = @invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             else
-                simStep =                   doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+                simStep =               doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             end
             if last_tranfer + 10*15*1000*1000 < Base.time_ns() 
                 lock(lk_sim)

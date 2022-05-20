@@ -2,7 +2,16 @@
 
 ## getting started 
 
+dont install julia from apt-get, because it's too old. Use official release instead: https://julialang.org/downloads/
+
 ```zsh
+ 
+# install julia from download
+sudo apt remove julia
+sudo mv julia-1.7.2 /opt/julia
+sudo ln -s /opt/julia/bin/julia /usr/local/bin/julia
+
+
 git clone ssh://git@wotanii.de:22123/wotanii/LifeSim.jl.git
 cd LifeSim.jl
 julia -e 'using Pkg; Pkg.develop(path=".")'
