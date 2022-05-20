@@ -107,6 +107,11 @@ module LSSimulation
         for agent in simStep.agent_list
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
 
+            if isnan(pos_new.x) || isnan(pos_new.y) || isnan(agent.direction_angle)|| isnan(agent.speed)
+                @info "removing agent with nan values" agent
+                continue
+            end
+
             if is_pushing_agents
                 pos_new = move_in_direction(pos_new, direction(agent.pos, WORLD_CENTER) + pi, MAX_SPEED)
             end
@@ -156,8 +161,7 @@ module LSSimulation
             end
         end
 
-        if length(agent_list_ref) <= ctrlState.cull_minimum
-            
+        if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
             parent = sample(agent_list_ref)[]
             child = mutate(parent, next_agent_id)
             push!(agent_list_ref, Ref(child))
