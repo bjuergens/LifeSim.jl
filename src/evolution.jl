@@ -146,8 +146,11 @@ function doTest()
     brain1 = init_random_network(2,3,4)
     brain2 = init_random_network(2,3,4)
 
-    # grandchild1, grandchild2 = LSEvolution.crossover_genome(child1, child2)
     cc1, cc2 = crossover_duo(Agent(3,brain1), Agent(4,brain2),5)
+
+    # gene in child must come from one of the parents
+    @test cc1.brain.genome[1] == brain1.genome[1] || cc1.brain.genome[1] == brain2.genome[1]
+    @test cc2.brain.genome[1] == brain1.genome[1] || cc2.brain.genome[1] == brain2.genome[1]
 end
 
 
