@@ -4,6 +4,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     include("lin.jl")
     include("neural.jl")
     include("models.jl") 
+    include("evolution.jl") 
     include("simulation.jl")
 end
 
