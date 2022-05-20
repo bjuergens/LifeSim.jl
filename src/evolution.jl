@@ -17,16 +17,37 @@ using CImGui: IM_COL32
         return rand(Normal(input, σ), 1)[1]
     end
 
+    function mutate_genome_duo(parent_genome, mutation_rate)
+        perturb = rand(Normal(0,mutation_rate), length(parent_genome))
+        result1 = wrap.(parent_genome + perturb, -10, 20)
+        result2 = wrap.(parent_genome - perturb, -10, 20)
+        return result1, result2
+    end
+
+    function crossover_genome(parent1, parent2)
+        @assert length(parent1) == length(parent2) 
+
+        len::Int = length(parent1) - 1
+        split1::Int = floor(2+ rand() * len)
+        split2::Int = floor(2+ rand() * len)
+        if split1 > split2
+            split1, split2 = split2, split1
+        end
+        if split1==split2
+            split1 = 1
+        end
+        child1 = vcat( parent1[1:split1], parent2[split1+1:split2], parent1[split2+1:end] )
+        child2 = vcat( parent2[1:split1], parent1[split1+1:split2], parent2[split2+1:end] )
+
+        return child1, child2
+    end
+
     function mutate_duo(parent::Agent, next_agent_id)
+        child_mut_rate = clamp( randdiff(parent.mutation_rate, 0.001), 0.00001, 0.1)
+        child_genome1, child_genome2 = mutate_genome_duo(parent.brain.genome, child_mut_rate)
+
         net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
         parent_genome = parent.brain.genome
-        perturb = rand(Normal(0,parent.mutation_rate), length(parent_genome))
-        child_mut_rate = clamp( randdiff(parent.mutation_rate, 0.001), 0.00001, 0.1)
-        
-        child_genome1 = parent_genome + perturb 
-        child_genome2 = parent_genome - perturb
-        child_genome1 = wrap.(child_genome1, -10, 20)
-        child_genome2 = wrap.(child_genome2, -10, 20)
         child_brain1 = NaturalNet(child_genome1, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.1)
         child_brain2 = NaturalNet(child_genome2, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.1)
         # todo: children are smaller at birth and grow overtime
@@ -109,6 +130,13 @@ function doTest()
     @test length(child1.brain.neural_state[]) == length(parent.brain.neural_state[])
     @test length(child1.brain.V) == length(parent.brain.V)
 
+    @inferred LSEvolution.crossover_genome(collect(1:5),collect(-1:-1:-5))
+
+    parent1, parent2 = collect(1:25), collect(-1:-1:-25)
+    child1, child2 = LSEvolution.crossover_genome(parent1, parent2)
+    @test length(child1) == length(child2) == length(parent1) == length(parent2)
+    @test_throws AssertionError LSEvolution.crossover_genome(collect(1:26), collect(-1:-1:-25))
+    @test_throws AssertionError LSEvolution.crossover_genome(collect(1:24), collect(-1:-1:-25))
 end
 
 
