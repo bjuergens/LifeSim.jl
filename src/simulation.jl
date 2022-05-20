@@ -123,13 +123,13 @@ module LSSimulation
 
             # @show speed accel desire.accelerate
             rotation = desire.rotate * MAX_ROTATE  
-            direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)            
-            agent_updated =  Agent(agent.id, agent.brain, 
+            direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)    
+            
+            agent_updated =  Agent(agent, 
                                 pos=Vec2(agent_pos_x, agent_pos_y), 
+                                color= agent.color,
                                 direction_angle=direction_angle, 
-                                speed=speed,
-                                size= agent.size,
-                                color= agent.color)
+                                speed=speed)
             push!(agent_list_individually, agent_updated)
         end
 
@@ -150,7 +150,7 @@ module LSSimulation
         if length(agent_list_individually) <= ctrlState.cull_minimum
             
             parent = sample(agent_list_individually)
-            child = mutate(parent, next_agent_id,ctrlState.mutation_sigma)
+            child = mutate(parent, next_agent_id)
             push!(agent_list_individually, child)
             next_agent_id += 1
         end
@@ -284,7 +284,7 @@ module LSSimulation
             else
                 simStep =                   doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             end
-            if last_tranfer + 15*1000*1000 < Base.time_ns() 
+            if last_tranfer + 10*15*1000*1000 < Base.time_ns() 
                 lock(lk_sim)
                 try
                     simState_transfer[].last_step=Ref(simStep)
@@ -292,6 +292,7 @@ module LSSimulation
                     unlock(lk_sim)
                 end
                 last_tranfer = Base.time_ns()
+                yield()
             end
         end
         @info "simulationLoop!... done"

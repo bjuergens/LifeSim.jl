@@ -13,25 +13,28 @@ using ..LSModels
 using Distributions: Normal
 using CImGui: IM_COL32
 
-    function randdiff(input)
-        return rand(Normal(input, 0.1), 1)[1]
+    function randdiff(input, σ)
+        return rand(Normal(input, σ), 1)[1]
     end
 
-    function mutate(parent::Agent, next_agent_id, σ)
+    function mutate(parent::Agent, next_agent_id)
         net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
         parent_genome = parent.brain.genome
-        pertube = rand(Normal(0,σ), length(parent_genome))
+        pertube = rand(Normal(0,parent.mutation_rate), length(parent_genome))
+        child_mut_rate = clamp( randdiff(parent.mutation_rate, 0.001), 0.00001, 0.1)
+        # @show parent.mutation_rate
+        # @show child_mut_rate
         child_genome = pertube + parent_genome
         wrap.(child_genome, -10, 20)
-        child_brain = NaturalNet(child_genome, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.01)
+        child_brain = NaturalNet(child_genome, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.1)
         # todo: children are smaller at birth and grow overtime
         child_size = parent.size 
         child_direction = -parent.direction_angle
         child_speed = 0
         child_pos = move_in_direction( parent.pos, -parent.direction_angle, child_size + parent.size )
         p_r, p_g, p_b, p_a = split_color(parent.color)
-        c_r = wrap(p_r+11,0, 255)
-        c_g = wrap(floor(randdiff(p_g)),0, 255)
+        c_r = wrap(p_r+5,0, 255)
+        c_g = wrap(floor(randdiff(p_g,1)),0, 255)
         c_b = p_b
         child_color = IM_COL32(c_r,c_g,c_b,255)
 
@@ -40,7 +43,8 @@ using CImGui: IM_COL32
                         direction_angle=child_direction, 
                         size=child_size, 
                         speed=child_speed, 
-                        color=child_color)
+                        color=child_color,
+                        mutation_rate=child_mut_rate)
     end
 
 
@@ -64,13 +68,13 @@ function doTest()
     @test 1+1≈2 #canary
 
     aAgent = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
-    @inferred mutate(aAgent,1, 0.01)
-    @inferred LSEvolution.randdiff(123)
+    @inferred mutate(aAgent,1)
+    @inferred LSEvolution.randdiff(123, 0.01)
 
     brain = init_random_network(num_sensors, 10, num_intentions)
     parent = Agent(1, brain, pos=Vec2(0.3,0.3), direction_angle=0, speed=0.02, size=0.05, color=0xff224466)   
 
-    child = mutate(parent,3, 0.01)
+    child = mutate(parent,3)
     
     @test !(child.pos ≈ parent.pos)
     @test !(child.color ≈ parent.color)

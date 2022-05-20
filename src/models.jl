@@ -49,12 +49,19 @@ mutable struct Agent
     id::Int64
     brain::NaturalNet
     pos::Vec2
-    direction_angle:: Cfloat
-    speed::Cfloat
+    mutation_rate::Cfloat
     size::Cfloat
     color::UInt32
-    Agent(idx, brain; pos=Vec2(0.3, 0.3), direction_angle=0.0, speed=0.1, size=0.1, color=0xff112233) = 
-      new(idx, brain, pos,                direction_angle,     speed,     size,      color)
+    direction_angle:: Cfloat
+    speed::Cfloat
+    # constructor for new agents
+    Agent(idx, brain; pos=Vec2(0.3, 0.3), mutation_rate=0.02, size=0.1, color=0xff112233, direction_angle=0.0, speed=0.0) = 
+      new(idx, brain, pos               , mutation_rate     , size,     color, direction_angle,     speed)
+
+    # constructor for updates
+    Agent(old::Agent; pos=Vec2(0.3, 0.3), color=0xff112233) = 
+      new(old.id, old.brain, old.pos, old.mutation_rate, old.size, color, direction_angle, speed)
+    
 end
 
 "current step of sim"

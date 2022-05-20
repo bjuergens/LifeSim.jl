@@ -41,8 +41,8 @@ module LSGui
 
     "map a point in sim space = [0,1]^2 to a point in pixelspace, which integer relativ to window"
     function sim_to_pixel_point(sim_pos::Vec2, pixel_base::CImGui.LibCImGui.ImVec2, pixel_width::CImGui.LibCImGui.ImVec2)
-        return ImVec2(ratio_to_intverall(sim_pos.x, pixel_base.x, pixel_width.x),
-        ratio_to_intverall(sim_pos.y, pixel_base.y, pixel_width.y))
+        return ImVec2(floor(ratio_to_intverall(sim_pos.x, pixel_base.x, pixel_width.x)),
+                      floor(ratio_to_intverall(sim_pos.y, pixel_base.y, pixel_width.y)))
     end
 
     function drawAgentCirc!(draw_list, canvas_pos, canvas_size, aAgent::Agent)
@@ -68,7 +68,7 @@ module LSGui
             sim_to_pixel_point(agent_move,canvas_pos, canvas_size),
             sim_to_pixel_point(agent_move_ort1,canvas_pos, canvas_size),
             sim_to_pixel_point(agent_move_ort2,canvas_pos, canvas_size),
-            IM_COL32(0, floor(255 * interval_to_ratio(aAgent.speed,0, 0.05)), 0, 255)
+            IM_COL32(0, 99, 0, 255)
         )
 
         compass_main = move_in_direction(aAgent.pos, aAgent.direction_angle - sensor.compass_center,      aAgent.size)
@@ -133,7 +133,8 @@ module LSGui
             
             CImGui.Separator()
             frametime = simState[].last_step[].last_frame_time_ms
-            CImGui.Text(string( @sprintf( "Frametime: %07.3f ms / %09.2f fps", frametime, 1000/frametime)))
+            step_no = simState[].last_step[].num_step
+            CImGui.Text(string( @sprintf( "Frametime: %07.3f ms / %09.2f fps / %g", frametime, 1000/frametime, step_no)))
             
             min_frametime_ms = Ref(controlState[].min_frametime_ms)
             CImGui.SliderFloat("min_frame_time", min_frametime_ms, 0.0, 100.0, "time = %.3f ms")
@@ -209,7 +210,7 @@ module LSGui
             CImGui.Separator()
 
             mutation_sigma = Ref(controlState[].mutation_sigma)
-            CImGui.SliderFloat("mutation_sigma", mutation_sigma, 0, 0.05)
+            CImGui.SliderFloat("mutation_sigma (unused)", mutation_sigma, 0, 0.05)
             controlState[].mutation_sigma = mutation_sigma[]
 
         CImGui.End()

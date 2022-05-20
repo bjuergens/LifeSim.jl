@@ -44,12 +44,7 @@ module LSLin
 
     "linear mapping from some interval to [0,1]. Enforces boundaries"
     function ratio_to_intverall(value::Number, start::Number, width::Number)
-        if value< 0.0
-            return start
-        end
-        if value > 1.0
-            return start + width
-        end
+        value = clamp(value, 0.0, 1.0)
         return start + (value * width)
     end
 
