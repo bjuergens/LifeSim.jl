@@ -300,7 +300,7 @@ module LSSimulation
             end
 
             if hotloading
-                simStep = @invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+                simStep = Base.@invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             else
                 simStep =               doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             end
