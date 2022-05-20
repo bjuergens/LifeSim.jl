@@ -44,8 +44,8 @@ num_intentions = 2
 
 
 
-"a single individual in sim"
-mutable struct Agent
+"a single individual at a specific point in time"
+struct Agent
     id::Int64
     brain::NaturalNet
     pos::Vec2
@@ -59,8 +59,8 @@ mutable struct Agent
       new(idx, brain, pos               , mutation_rate     , size,     color, direction_angle,     speed)
 
     # constructor for updates
-    Agent(old::Agent; pos=Vec2(0.3, 0.3), color=0xff112233) = 
-      new(old.id, old.brain, old.pos, old.mutation_rate, old.size, color, direction_angle, speed)
+    Agent(old::Agent; pos=Vec2(0.3, 0.3),  direction_angle, speed) = 
+      new(old.id, old.brain, pos, old.mutation_rate, old.size, old.color, direction_angle, speed)
     
 end
 

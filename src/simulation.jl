@@ -47,8 +47,9 @@ module LSSimulation
         end
         move_vec = stretch_to_length(agent1.pos - agent2.pos, move_dist)
         ratio = (agent1.size^2) / (agent2.size^2)
-        agent1.pos = agent1.pos + (move_vec / ratio)
-        agent2.pos = agent2.pos - (move_vec * ratio)
+        pos1 = agent1.pos + (move_vec / ratio)
+        pos2 = agent2.pos - (move_vec * ratio)
+        return pos1, pos2
     end
 
         
@@ -98,7 +99,7 @@ module LSSimulation
 
 
     function update_agents(simStep::SimulationStep, ctrlState::ControlState, next_agent_id)
-        agent_list_individually::Vector{Agent} = []
+        agent_list_ref::Vector{Ref{Agent}} = []
 
         steps_since_last_cull = simStep.num_step - simStep.step_of_last_cull
         is_pushing_agents = steps_since_last_cull < ctrlState.cull_frequency/3
@@ -127,14 +128,14 @@ module LSSimulation
             
             agent_updated =  Agent(agent, 
                                 pos=Vec2(agent_pos_x, agent_pos_y), 
-                                color= agent.color,
                                 direction_angle=direction_angle, 
                                 speed=speed)
-            push!(agent_list_individually, agent_updated)
+            push!(agent_list_ref, Ref(agent_updated))
         end
 
-        for (agent1, agent2) in combinations(agent_list_individually, 2)
-
+        for (agent1_ref, agent2_ref) in combinations(agent_list_ref, 2)
+            agent1 = agent1_ref[]
+            agent2 = agent2_ref[]
             dist = distance(agent1.pos, agent2.pos)
 
             if dist < 0.0000001
@@ -143,20 +144,34 @@ module LSSimulation
             end
             
             if dist < agent1.size + agent2.size
-                collision(agent1, agent2)
+                pos1, pos2 = collision(agent1, agent2)
+                agent1_ref=Ref(Agent(agent1, 
+                                        pos=pos1, 
+                                        direction_angle=agent1.direction_angle, 
+                                        speed=agent1.speed))
+                agent2_ref=Ref(Agent(agent2, 
+                                        pos=pos2, 
+                                        direction_angle=agent2.direction_angle, 
+                                        speed=agent2.speed))
             end
         end
 
-        if length(agent_list_individually) <= ctrlState.cull_minimum
+        if length(agent_list_ref) <= ctrlState.cull_minimum
             
-            parent = sample(agent_list_individually)
+            parent = sample(agent_list_ref)[]
             child = mutate(parent, next_agent_id)
-            push!(agent_list_individually, child)
+            push!(agent_list_ref, Ref(child))
             next_agent_id += 1
         end
 
+        agent_list_result::Vector{Agent} = []
 
-        return agent_list_individually, next_agent_id
+        for a_ref in agent_list_ref
+            push!(agent_list_result, a_ref[])
+
+        end
+        
+        return agent_list_result, next_agent_id
     end
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
@@ -328,9 +343,7 @@ end
 
 function applyMakeSensor(pos, dir)
     
-    tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
-    tAgent1.pos = pos
-    tAgent1.direction_angle = dir
+    tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=pos, direction_angle=dir)  
     result = LSSimulation.makeSensorInput(tAgent1)
     @test result.compass_north > 0
     return result
@@ -341,20 +354,20 @@ function test_collision(pos1, pos2, size1, size2)
     tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=pos1, size=size1)  
     tAgent2 = Agent(2, init_random_network(2, 3, 4), pos=pos2, size=size2)
     pre_dist = distance(tAgent1.pos, tAgent2.pos)
-    LSSimulation.collision(tAgent1, tAgent2)
+    pos1_post, pos2_post = LSSimulation.collision(tAgent1, tAgent2)
 
     # since since their distance was smaller than their sumed sized, they did move
-    @test distance(tAgent1.pos, tAgent2.pos) > pre_dist
-    @test distance(tAgent1.pos, pos1) > 0.01
+    @test distance(pos1_post, pos2_post) > pre_dist
+    @test distance(tAgent1.pos, pos1_post) > 0.01
 
     # both got move in exact opposite directions
-    @test direction(tAgent1.pos, pos1) ≈ direction(tAgent2.pos, pos2) + pi
+    @test direction(pos1_post, pos1) ≈ direction(pos2_post, pos2) + pi
 
     # because size is equal, both got moved by same amount
-    @test distance(tAgent1.pos, pos1) ≈ distance(tAgent2.pos, pos2) 
+    @test distance(pos1_post, pos1) ≈ distance(pos2_post, pos2) 
 
     # after each collision they should exactly touch
-    @test distance(tAgent1.pos, tAgent2.pos) ≈ tAgent1.size + tAgent2.size
+    @test distance(pos1_post, pos2_post) ≈ tAgent1.size + tAgent2.size
 end
 
 function doTest()
@@ -392,25 +405,5 @@ if abspath(PROGRAM_FILE) == @__FILE__
     using .LSSimulation
     doTest()
 
-    do_open = false
-    if do_open
-        include("gui.jl")
-        using .LSGui
-        using .LSModels
-        list = simState.last_step[].agent_list
-
-        cAgent = Agent(Vec2(0.2, 0.3), pi/2, 0.01, 0.05, list[1].color ,3)
-        push!(list, cAgent)
-
-        sim_ref = Ref(simState)
-        t_render, _ = start_render_loop!(ctrlState, sim_ref)
-        @info "starting simloop loop..."
-        workThread = Threads.@spawn simulationLoop!($sim_ref, $ctrlState)
-        !isinteractive() && wait(t_render)
-        @info "gui done"
-        ctrlState.is_stop = true
-        wait(workThread)
-        @info "done... done"
-    end
 
 end
