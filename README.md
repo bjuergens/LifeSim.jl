@@ -112,3 +112,29 @@ BenchmarkTools.Trial: 10000 samples with 9 evaluations.
 
  Memory estimate: 3.06 KiB, allocs estimate: 20.
 ```
+
+```julia
+julia> @benchmark mutate_genome_duo(data...) setup=(data=(randn(50),0.1))
+BenchmarkTools.Trial: 10000 samples with 182 evaluations.
+ Range (min … max):  579.692 ns …   5.470 μs  ┊ GC (min … max): 0.00% … 83.99%
+ Time  (median):     655.445 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   706.123 ns ± 358.661 ns  ┊ GC (mean ± σ):  4.84% ±  8.22%
+
+    ▄▆█▅▃▃▂▂▁ ▁                                                 ▁
+  ▅▇████████████▇▅▆▅▅▅▄▅▃▄▁▄▁▄▄▃▁▁▁▁▁▁▁▁▁▄▁▁▁▃▃▃▃▄▅▃▃▅▆█▇▆▆▅▄▃▁ █
+  580 ns        Histogram: log(frequency) by time       1.63 μs <
+
+ Memory estimate: 2.42 KiB, allocs estimate: 5.
+
+julia> @benchmark crossover_genome(data...) setup=(data=(randn(50),randn(50)))
+BenchmarkTools.Trial: 10000 samples with 198 evaluations.
+ Range (min … max):  445.621 ns … 12.457 μs  ┊ GC (min … max):  0.00% … 91.37%
+ Time  (median):     506.020 ns              ┊ GC (median):     0.00%
+ Time  (mean ± σ):   624.465 ns ±  1.075 μs  ┊ GC (mean ± σ):  16.55% ±  9.13%
+
+  ▁▄▆▇█▇▅▃▃▃▂▂▃▃▁                                              ▂
+  █████████████████▇▇▆▆▅▅▅▄▅▄▄▄▁▄▄▄▃▄▄▄▅▄▅▅▄▆▆▅▅▅▄▁▃▄▄▆▆▅▅▄▅▄▅ █
+  446 ns        Histogram: log(frequency) by time      1.22 μs <
+
+ Memory estimate: 2.10 KiB, allocs estimate: 8.
+``` 
