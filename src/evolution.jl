@@ -6,12 +6,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSEvolution
-export mutate_duo, split_color
+export mutate_duo, split_color, crossover_duo
 using ..LSNaturalNet
 using ..LSLin
 using ..LSModels
 using Distributions: Normal
 using CImGui: IM_COL32
+using StaticArrays
 
     function randdiff(input, σ)
         return rand(Normal(input, σ), 1)[1]
@@ -38,8 +39,40 @@ using CImGui: IM_COL32
         end
         child1 = vcat( parent1[1:split1], parent2[split1+1:split2], parent1[split2+1:end] )
         child2 = vcat( parent2[1:split1], parent1[split1+1:split2], parent2[split2+1:end] )
+        
 
-        return child1, child2
+        return SVector{length(child1),Float32}(child1), SVector{length(child2),Float32}(child2)
+    end
+
+    function make_child_from_genome(child_genome, direction, child_mut_rate, parent::Agent, next_agent_id::Int)
+
+        net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
+        child_brain = NaturalNet(child_genome, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out)
+        # todo: children are smaller at birth and grow overtime
+        child_size = parent.size 
+        child_speed = 0
+        child_pos = move_in_direction( parent.pos, direction, child_size + parent.size )
+        p_r, p_g, p_b, p_a = split_color(parent.color)
+        c_r = wrap(p_r+5,0, 255)
+        c_g = wrap(floor(randdiff(p_g,1)),0, 255)
+        c_b = p_b
+        child_color = IM_COL32(c_r,c_g,c_b,255)
+
+        return Agent(next_agent_id, child_brain,
+                        pos=child_pos,
+                        direction_angle=direction,
+                        size=child_size, 
+                        speed=child_speed, 
+                        color=child_color,
+                        mutation_rate=child_mut_rate) 
+    end
+
+    function crossover_duo(p1::Agent, p2::Agent, next_agent_id::Int)
+        child_genome1, child_genome2 = crossover_genome(p1.brain.genome, p1.brain.genome)
+        result1 = make_child_from_genome(child_genome1, p1.direction_angle + pi/2, p1.mutation_rate, p1, next_agent_id)
+        result2 = make_child_from_genome(child_genome2, p2.direction_angle - pi/2, p2.mutation_rate, p2, next_agent_id+1)
+
+        return result1, result2
     end
 
     function mutate_duo(parent::Agent, next_agent_id)
@@ -83,7 +116,7 @@ using CImGui: IM_COL32
 end #module LSEvolution
 
 
-module LSEvolutionTest
+module LSEvolutionTests
 export doTest
 using ..LSEvolution
 using ..LSModelExamples
@@ -96,7 +129,7 @@ using StaticArrays
 
 function doTest()
 
-@testset "LSEvolutionTesT" begin
+@testset "LSEvolutionTests" begin
     @test 1+1≈2 #canary
 
     aAgent = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
@@ -130,7 +163,7 @@ function doTest()
     @test length(child1.brain.neural_state[]) == length(parent.brain.neural_state[])
     @test length(child1.brain.V) == length(parent.brain.V)
 
-    @inferred LSEvolution.crossover_genome(collect(1:5),collect(-1:-1:-5))
+    @inferred Tuple{SVector,SVector} LSEvolution.crossover_genome(collect(1:5),collect(-1:-1:-5))
 
     parent1, parent2 = collect(1:25), collect(-1:-1:-25)
     child1, child2 = LSEvolution.crossover_genome(parent1, parent2)
@@ -138,16 +171,22 @@ function doTest()
     @test length(child1) == length(child2) == length(parent1) == length(parent2)
     @test_throws AssertionError LSEvolution.crossover_genome(collect(1:26), collect(-1:-1:-25))
     @test_throws AssertionError LSEvolution.crossover_genome(collect(1:24), collect(-1:-1:-25))
+    
+    brain1 = init_random_network(2,3,4)
+    brain2 = init_random_network(2,3,4)
+
+    # grandchild1, grandchild2 = LSEvolution.crossover_genome(child1, child2)
+    cc1, cc2 = crossover_duo(Agent(3,brain1), Agent(4,brain2),5)
 end
 
 
 end
 
-end #module LSEvolutionTest
+end #module LSEvolutionTests
 
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    using .LSEvolutionTest
+    using .LSEvolutionTests
     doTest()
 end
