@@ -134,6 +134,7 @@ function doTest()
 
     parent1, parent2 = collect(1:25), collect(-1:-1:-25)
     child1, child2 = LSEvolution.crossover_genome(parent1, parent2)
+    @test all(map(x-> x==0, child1 .+ child2 )) # children are exact opposites, because parents were. 
     @test length(child1) == length(child2) == length(parent1) == length(parent2)
     @test_throws AssertionError LSEvolution.crossover_genome(collect(1:26), collect(-1:-1:-25))
     @test_throws AssertionError LSEvolution.crossover_genome(collect(1:24), collect(-1:-1:-25))
