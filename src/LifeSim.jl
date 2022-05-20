@@ -67,17 +67,8 @@ module LifeSim
         ref_ctrl_state_from_gui = Ref(ctrl_state_from_gui)
         ref_ctrl_state_to_simulation = Ref(ctrl_state_from_gui)
 
-        num_agents = ctrl_state_from_gui.cull_minimum
-        agent_list = []
-        for i in 1:num_agents
-            color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
-            pos = Vec2(0.9*i/num_agents, 0.9*i/num_agents)
-            brain = init_random_network(num_sensors, 10, num_intentions)
-            new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.02, size=0.02, color=color)   
-            push!(agent_list,new_agent)
-        end
 
-        sim_state_from_sim = SimulationState(SimulationStep(agent_list= agent_list))
+        sim_state_from_sim = initial_sim_state(ctrlState=ctrl_state_from_gui)
         ref_sim_state_to_gui = Ref(deepcopy(sim_state_from_sim))
         ref_sim_state_to_simulation = Ref(sim_state_from_sim)
 

@@ -7,7 +7,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 module LSSimulation
-    export simulationLoop!, lk_sim, lk_ctrl
+    export simulationLoop!, lk_sim, lk_ctrl, initial_sim_state
 
     using Revise
     using ..LSModels
@@ -107,8 +107,7 @@ module LSSimulation
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
 
             if is_pushing_agents
-                # @info "blubb"
-                pos_new = move_in_direction(pos_new, -direction(agent.pos, WORLD_CENTER), 0.03)
+                pos_new = move_in_direction(pos_new, direction(agent.pos, WORLD_CENTER) + pi, MAX_SPEED)
             end
 
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
@@ -138,8 +137,8 @@ module LSSimulation
 
             dist = distance(agent1.pos, agent2.pos)
 
-            if dist < 0.00001
-                @warn "dist ist very low" dist
+            if dist < 0.0000001
+                @debug "dist ist very low" dist
                 continue
             end
             
@@ -151,7 +150,7 @@ module LSSimulation
         if length(agent_list_individually) <= ctrlState.cull_minimum
             
             parent = sample(agent_list_individually)
-            child = mutate(parent, next_agent_id)
+            child = mutate(parent, next_agent_id,ctrlState.mutation_sigma)
             push!(agent_list_individually, child)
             next_agent_id += 1
         end
@@ -161,35 +160,39 @@ module LSSimulation
     end
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
-    function doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step_request)
+    function doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step_request, do_pop_reset)
 
+        if do_pop_reset
+            agentList, next_agent_id = init_population(simStep.next_agent_id, ctrlState=ctrlState)
+            step_of_last_cull = simStep.num_step
+        else
         # first part: update actual state
-        agentList, next_agent_id = update_agents(simStep, ctrlState, simStep.next_agent_id)
+            agentList, next_agent_id = update_agents(simStep, ctrlState, simStep.next_agent_id)
 
-        step_of_last_cull = simStep.step_of_last_cull
+            step_of_last_cull = simStep.step_of_last_cull
 
-        if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
+            if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
 
-            if length(agentList) > ctrlState.cull_minimum
-                @info "culling..."
-                step_of_last_cull=simStep.num_step
-                cull_num::Int = floor( length(agentList) * ctrlState.cull_ratio)
-                agentList = cull!(agentList,cull_num)
-            else
-                @info "not enough population to cull"
+                if length(agentList) > ctrlState.cull_minimum
+                    step_of_last_cull=simStep.num_step
+                    cull_num::Int = floor( length(agentList) * ctrlState.cull_ratio)
+                    agentList = cull!(agentList,cull_num)
+                else
+                    @info "not enough population to cull"
+                end
+                # todo: make some cross-overs
+                # todo: make some mutation
             end
-            # todo: make some cross-overs
-            # todo: make some mutation
-        end
 
-        if add_agent_in_this_step_request
-            @warn "not implemented"
-            # push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
-            # next_agent_id+=1
-        end
+            if add_agent_in_this_step_request
+                @warn "not implemented"
+                # push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
+                # next_agent_id+=1
+            end
 
-        # second part: perform meta-tasks around simulation step
-        
+            # second part: perform meta-tasks around simulation step
+            
+        end
         last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000000
         time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
         if time_to_wait_s > 0
@@ -197,27 +200,42 @@ module LSSimulation
             # https://discourse.julialang.org/t/accuracy-of-sleep/5546
             sleep(time_to_wait_s)
         end
-
-        lock(lk_sim)
-        try
-            simState_transfer[].last_step=Ref(simStep)
-        finally
-            unlock(lk_sim)
-        end
         
         return SimulationStep(num_step=simStep.num_step + 1, agent_list= agentList, last_frame_time_ms=last_frame_time_ms, step_of_last_cull=step_of_last_cull, next_agent_id=next_agent_id)
     end
 
+    function init_population(next_agent_id; ctrlState::ControlState)
+        num_hidden=10
+        num_agents = ctrlState.cull_minimum
+        agent_list = []
+        for i in 1:num_agents
+            color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
+            pos = Vec2(0.9*i/(num_agents+1), 0.9*i/(num_agents+1))
+            brain = init_random_network(num_sensors, num_hidden, num_intentions)
+            new_agent = Agent(next_agent_id+i, brain, pos=pos, direction_angle=0, speed=0.01, size=0.005, color=color)   
+            push!(agent_list,new_agent)
+        end
+        return agent_list, next_agent_id+num_agents
+    end
+    
+    function initial_sim_state(;ctrlState::ControlState)
+        agent_list, _ = init_population(1, ctrlState=ctrlState)
+    
+        return SimulationState(SimulationStep(agent_list= agent_list))
+    end
 
     function simulationLoop!(simState_transfer::Ref{SimulationState}, ctrlState_transfer::Ref{ControlState}, hotloading=true)
         @info "simulationLoop!..."
 
         ctrlState = ctrlState_transfer[]
-        simState = simState_transfer[].last_step[]
+        simStep = simState_transfer[].last_step[]
         last_request_revise = ctrlState.request_revise
         last_request_play = ctrlState.request_play
         last_request_pause = ctrlState.request_pause
         last_request_add_agent = ctrlState.request_add_agent
+        last_request_pop_reset = ctrlState.request_pop_reset
+
+        last_tranfer = Base.time_ns()
         is_paused = false
         while !ctrlState.is_stop
             # some things must be handled outside doSimulationStep and thus can not be hot-reloaded
@@ -226,6 +244,7 @@ module LSSimulation
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
             add_agent_in_this_step_request = false
+            do_pop_reset = false
             if last_request_revise != ctrlState.request_revise
                 if last_request_revise > ctrlState.request_revise
                     @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
@@ -249,7 +268,11 @@ module LSSimulation
                 last_request_add_agent = ctrlState.request_add_agent
                 add_agent_in_this_step_request = true
             end
-
+            if last_request_pop_reset != ctrlState.request_pop_reset
+                @info "request_pop_reset received"
+                last_request_pop_reset = ctrlState.request_pop_reset
+                do_pop_reset = true
+            end
 
             if is_paused
                 sleep(0.1)
@@ -257,9 +280,18 @@ module LSSimulation
             end
 
             if hotloading
-                simState = Base.invokelatest(doSimulationStep,last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step_request)
+                simStep = Base.invokelatest(doSimulationStep,last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
             else
-                simState =                   doSimulationStep(last_time_ns, simState_transfer, ctrlState, lk_sim, simState, add_agent_in_this_step_request)
+                simStep =                   doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+            end
+            if last_tranfer + 15*1000*1000 < Base.time_ns() 
+                lock(lk_sim)
+                try
+                    simState_transfer[].last_step=Ref(simStep)
+                finally
+                    unlock(lk_sim)
+                end
+                last_tranfer = Base.time_ns()
             end
         end
         @info "simulationLoop!... done"
@@ -277,27 +309,13 @@ using ..LSSimulation:cull!
 using ..LSNaturalNet
 using CImGui: IM_COL32
 
-function initial_sim_state(;num_hidden=10,num_agents = 2,test_ctrlState = ControlState())
-
-    num_agents = 2
-    agent_list = []
-    for i in 1:num_agents
-        color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
-        pos = Vec2(0.9*i/(num_agents+1), 0.9*i/(num_agents+1))
-        brain = init_random_network(num_sensors, num_hidden, num_intentions)
-        new_agent = Agent(i, brain, pos=pos, direction_angle=0, speed=0.01, size=0.05, color=color)   
-        push!(agent_list,new_agent)
-    end
-
-    return SimulationState(SimulationStep(agent_list= agent_list))
-end
 
 function run_headless(max_time)
 
     # todo: extract to method, because DRY
     # test_simState = deepcopy(simState)
     test_ctrlState = ControlState()
-    test_simState = initial_sim_state()
+    test_simState = initial_sim_state(ctrlState = test_ctrlState)
     ctrlThread = Threads.@spawn begin
         sleep(max_time) 
         test_ctrlState.is_stop = true
@@ -342,12 +360,11 @@ function doTest()
     @testset "simtest" begin
         @test 1+1==2  # canary
 
-        test_simState_dummy = initial_sim_state()
+        test_simState_dummy = initial_sim_state(ctrlState=ControlState())
         agent_list = test_simState_dummy.last_step[].agent_list
         cull!_res = cull!(agent_list,1)
-        
 
-        @test run_headless(3.0) > 2
+        @test run_headless(2.5) > 2
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.5, 0.5)
         test_collision(Vec2(0.35,0.3), Vec2(0.3,0.35), 0.8, 0.8)
         test_collision(Vec2(0.33,0.3), Vec2(0.33,0.35), 0.8, 0.8)

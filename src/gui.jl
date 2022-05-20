@@ -188,19 +188,30 @@ module LSGui
                 @info "send request_add_agent"
                 controlState[].request_add_agent += 1
             end
+            CImGui.Button("pop reset") && begin 
+                @info "send request_pop_reset"
+                controlState[].request_pop_reset += 1
+            end
             CImGui.Separator()
 
             cull_minimum = Ref(controlState[].cull_minimum)
-            CImGui.SliderInt("cull_minimum", cull_minimum, 1, 100)
+            CImGui.SliderInt("cull_minimum", cull_minimum, 10, 500)
             controlState[].cull_minimum = cull_minimum[]
 
             cull_frequency = Ref(controlState[].cull_frequency)
-            CImGui.SliderFloat("cull_frequency", cull_frequency, 1, 100)
+            CImGui.SliderFloat("cull_frequency", cull_frequency, 1, 200)
             controlState[].cull_frequency = cull_frequency[]
 
             cull_ratio = Ref(controlState[].cull_ratio)
             CImGui.SliderFloat("cull_ratio", cull_ratio, 0, 1)
             controlState[].cull_ratio = cull_ratio[]
+
+            CImGui.Separator()
+
+            mutation_sigma = Ref(controlState[].mutation_sigma)
+            CImGui.SliderFloat("mutation_sigma", mutation_sigma, 0, 0.05)
+            controlState[].mutation_sigma = mutation_sigma[]
+
         CImGui.End()
     end
 

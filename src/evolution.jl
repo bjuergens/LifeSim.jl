@@ -17,9 +17,7 @@ using CImGui: IM_COL32
         return rand(Normal(input, 0.1), 1)[1]
     end
 
-    function mutate(parent::Agent, next_agent_id, σ=0.01)
-
-        # todo: clip all genes
+    function mutate(parent::Agent, next_agent_id, σ)
         net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
         parent_genome = parent.brain.genome
         pertube = rand(Normal(0,σ), length(parent_genome))
@@ -66,13 +64,13 @@ function doTest()
     @test 1+1≈2 #canary
 
     aAgent = Agent(1, init_random_network(2, 3, 4), pos=Vec2(0.1,0.1))  
-    @inferred mutate(aAgent,1)
+    @inferred mutate(aAgent,1, 0.01)
     @inferred LSEvolution.randdiff(123)
 
     brain = init_random_network(num_sensors, 10, num_intentions)
     parent = Agent(1, brain, pos=Vec2(0.3,0.3), direction_angle=0, speed=0.02, size=0.05, color=0xff224466)   
 
-    child = mutate(parent,3)
+    child = mutate(parent,3, 0.01)
     
     @test !(child.pos ≈ parent.pos)
     @test !(child.color ≈ parent.color)
