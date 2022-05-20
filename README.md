@@ -25,6 +25,14 @@ to run individual files directly from VSCode:
 
 # dev notes
 
+## hotloading in REPL
+
+```julia
+using Revise
+import LifeSim.LSEvolutionTest.doTest
+doTest()
+```
+
 ## add deps
 
 
