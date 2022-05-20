@@ -69,8 +69,8 @@ using StaticArrays
 
     function crossover_duo(p1::Agent, p2::Agent, next_agent_id::Int)
         child_genome1, child_genome2 = crossover_genome(p1.brain.genome, p1.brain.genome)
-        result1 = make_child_from_genome(child_genome1, p1.direction_angle + pi/2, p1.mutation_rate, p1, next_agent_id)
-        result2 = make_child_from_genome(child_genome2, p2.direction_angle - pi/2, p2.mutation_rate, p2, next_agent_id+1)
+        result1 = make_child_from_genome(child_genome1, p1.direction_angle + pi/4, p1.mutation_rate, p1, next_agent_id)
+        result2 = make_child_from_genome(child_genome2, p2.direction_angle - pi/4, p2.mutation_rate, p2, next_agent_id+1)
 
         return result1, result2
     end
