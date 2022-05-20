@@ -34,7 +34,6 @@ module LSSimulation
     COL_COLLISION = IM_COL32(255,255,40,255)
     WORLD_CENTER = Vec2(0.5,0.5)
 
-    # MAX_ROTATE = 0.05 # max rotation in rad per timestep
     MAX_ROTATE = 0.25 # max rotation in rad per timestep
     MAX_ACCELLERATE = 0.001
     MAX_SPEED = 0.01
@@ -113,7 +112,7 @@ module LSSimulation
             end
 
             if is_pushing_agents
-                pos_new = move_in_direction(pos_new, direction(agent.pos, WORLD_CENTER) + pi, MAX_SPEED)
+                pos_new = move_in_direction(pos_new, direction(agent.pos, WORLD_CENTER) + pi, 1.3MAX_SPEED)
             end
 
             agent_pos_x::Cfloat = clip(pos_new.x, agent.size, 1.0 - 2agent.size)
@@ -125,7 +124,7 @@ module LSSimulation
             # @show desire
             # @show desire.accelerate
             accel = desire.accelerate * MAX_ACCELLERATE
-            speed = clip( agent.speed + accel, 0, MAX_SPEED )
+            speed = clamp( agent.speed + accel, -MAX_SPEED/2, MAX_SPEED )
 
             # @show speed accel desire.accelerate
             rotation = desire.rotate * MAX_ROTATE  
@@ -160,12 +159,14 @@ module LSSimulation
                                         speed=agent2.speed))
             end
         end
-
-        if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
-            parent = sample(agent_list_ref)[]
-            child = mutate(parent, next_agent_id)
-            push!(agent_list_ref, Ref(child))
-            next_agent_id += 1
+        for i in 1:5
+            if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
+                parent = sample(agent_list_ref)[]
+                child1, child2 = mutate_duo(parent, next_agent_id)
+                push!(agent_list_ref, Ref(child1))
+                push!(agent_list_ref, Ref(child2))
+                next_agent_id += 2
+            end
         end
 
         agent_list_result::Vector{Agent} = []
