@@ -78,38 +78,9 @@ using StaticArrays
     function mutate_duo(parent::Agent, next_agent_id)
         child_mut_rate = clamp( randdiff(parent.mutation_rate, 0.001), 0.00001, 0.1)
         child_genome1, child_genome2 = mutate_genome_duo(parent.brain.genome, child_mut_rate)
-
-        net_dim_in, net_dim_N, net_dim_out, net_precision = typeof(parent.brain).parameters
-        parent_genome = parent.brain.genome
-        child_brain1 = NaturalNet(child_genome1, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.1)
-        child_brain2 = NaturalNet(child_genome2, input_dim=net_dim_in, neural_dim=net_dim_N, output_dim=net_dim_out, delta_t=0.1)
-        # todo: children are smaller at birth and grow overtime
-        child_size = parent.size 
-        child_direction1 = parent.direction_angle + pi/2
-        child_direction2 = parent.direction_angle - pi/2
-        child_speed = 0
-        child_pos1 = move_in_direction( parent.pos, child_direction1, child_size + parent.size )
-        child_pos2 = move_in_direction( parent.pos, child_direction2, child_size + parent.size )
-        p_r, p_g, p_b, p_a = split_color(parent.color)
-        c_r = wrap(p_r+5,0, 255)
-        c_g = wrap(floor(randdiff(p_g,1)),0, 255)
-        c_b = p_b
-        child_color = IM_COL32(c_r,c_g,c_b,255)
-
-        return Agent(next_agent_id, child_brain1,
-                        pos=child_pos1,
-                        direction_angle=child_direction1, 
-                        size=child_size, 
-                        speed=child_speed, 
-                        color=child_color,
-                        mutation_rate=child_mut_rate) , 
-                Agent(next_agent_id+1, child_brain2,
-                        pos=child_pos2,
-                        direction_angle=child_direction2, 
-                        size=child_size, 
-                        speed=child_speed, 
-                        color=child_color,
-                        mutation_rate=child_mut_rate)
+        child1 =  make_child_from_genome(child_genome1, parent.direction_angle + pi/2, child_mut_rate, parent, next_agent_id)
+        child2 =  make_child_from_genome(child_genome2, parent.direction_angle - pi/2, child_mut_rate, parent, next_agent_id+1)
+        return child1, child2
     end
 
 
