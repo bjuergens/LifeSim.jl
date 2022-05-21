@@ -25,7 +25,6 @@ module LSSimulation
     using Distributions: Normal # too slow!!
     using Flatten
     using StaticArrays
-
     lk_sim = ReentrantLock()
     lk_ctrl = ReentrantLock()
 
@@ -40,11 +39,15 @@ module LSSimulation
     ENERGY_LOSS_BASE = 0.0001 # energy loss per timestep
     ENERGY_LOSS_PER_SPEED = 0.1 # energy loss per timestep multiplied with speed
 
+    lock_agent_separated_updates = ReentrantLock()
+    lock_agent_collision = ReentrantLock()
+
     "process collision between agents by updating their position so they touch each other without overlapping"
     function collision(agent1::Agent, agent2::Agent)
-        move_dist =  (agent1.size + agent2.size - distance(agent1.pos - agent2.pos)) / 2
+        move_dist =  (agent1.size + agent2.size - distance(agent1.pos, agent2.pos)) / 2
         if move_dist < Ɛ
-            @warn "negative move dist -> unexpected results" move_dist
+            # agents don't touch anymore --> nothing todo
+            return  agent1.pos,  agent2.pos
         end
         move_vec = stretch_to_length(agent1.pos - agent2.pos, move_dist)
         ratio = (agent1.size^2) / (agent2.size^2)
@@ -68,6 +71,7 @@ module LSSimulation
         compass_center = aAgent.direction_angle - direction(aAgent.pos, WORLD_CENTER)
 
         return SensorInput(
+            Cfloat(1.0), 
             wrap(compass_north ,0, 2pi), 
             wrap(compass_center,0, 2pi), 
             aAgent.speed, 
@@ -105,7 +109,7 @@ module LSSimulation
         steps_since_last_cull = simStep.num_step - simStep.step_of_last_cull
         is_pushing_agents = steps_since_last_cull < ctrlState.cull_frequency/3
 
-        for agent in simStep.agent_list
+        Threads.@threads for agent in simStep.agent_list
             pos_new = move_in_direction(agent.pos, agent.direction_angle, agent.speed)
 
             if isnan(pos_new.x) || isnan(pos_new.y) || isnan(agent.direction_angle)|| isnan(agent.speed)
@@ -122,25 +126,25 @@ module LSSimulation
             
             sensor = makeSensorInput(agent)
             desire = agent_think_with_brain(agent, sensor)
-            # desire2 = agent_think(sensor)
-            # @show desire
-            # @show desire.accelerate
             accel = desire.accelerate * MAX_ACCELLERATE
             speed = clamp( agent.speed + accel, -MAX_SPEED/2, MAX_SPEED )
             energy = agent.energy - ENERGY_LOSS_BASE - (speed*ENERGY_LOSS_PER_SPEED)
-            # @show speed accel desire.accelerate
             rotation = desire.rotate * MAX_ROTATE  
             direction_angle = wrap(agent.direction_angle+rotation, 0, 2pi)    
-            
+     
             agent_updated =  Agent(agent, 
                                 pos=Vec2(agent_pos_x, agent_pos_y), 
                                 direction_angle=direction_angle, 
                                 speed=speed,
                                 energy=energy)
-            push!(agent_list_ref, Ref(agent_updated))
+            lock(lock_agent_separated_updates) do
+                push!(agent_list_ref, Ref(agent_updated))
+            end
         end
 
-        for (agent1_ref, agent2_ref) in combinations(agent_list_ref, 2)
+        collision_candidate::Vector{Tuple{Ref{Agent}, Ref{Agent}}} = []
+        Threads.@threads for (agent1_ref, agent2_ref) in collect( combinations(agent_list_ref, 2) )
+           
             agent1 = agent1_ref[]
             agent2 = agent2_ref[]
             dist = distance(agent1.pos, agent2.pos)
@@ -151,20 +155,34 @@ module LSSimulation
             end
             
             if dist < agent1.size + agent2.size
-                pos1, pos2 = collision(agent1, agent2)
-                agent1_ref=Ref(Agent(agent1, 
-                                        pos=pos1, 
-                                        direction_angle=agent1.direction_angle, 
-                                        speed=agent1.speed, 
-                                        energy=agent1.energy))
-                agent2_ref=Ref(Agent(agent2, 
-                                        pos=pos2, 
-                                        direction_angle=agent2.direction_angle, 
-                                        speed=agent2.speed,
-                                        energy=agent1.energy))
+                lock(lock_agent_collision) do
+                    push!(collision_candidate, (agent1_ref,agent2_ref) )
+                end
             end
         end
-        for i in 1:1
+
+        # the actual handling of collision is singlethreaded for now, because they actually write stuff
+        for (agent1_ref,agent2_ref) in collision_candidate
+            # @show "blubb"
+            agent1 = agent1_ref[]
+            agent2 = agent2_ref[]
+
+            pos1, pos2 = collision(agent1, agent2)
+            agent1_ref[]=Agent(agent1, 
+                                    pos=pos1, 
+                                    direction_angle=agent1.direction_angle, 
+                                    speed=agent1.speed, 
+                                    energy=agent1.energy)
+            agent2_ref[]=Agent(agent2, 
+                                    pos=pos2, 
+                                    direction_angle=agent2.direction_angle, 
+                                    speed=agent2.speed,
+                                    energy=agent2.energy)
+        end
+
+        agent_list_result::Vector{Agent} = []
+        
+        for i in 1:50
             if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
                 parent1, parent2 = samplepair(agent_list_ref)
                 childA, childB = crossover_duo(parent1[], parent2[], next_agent_id)
@@ -172,18 +190,18 @@ module LSSimulation
                 next_agent_id += 2
                 child3, child4 = mutate_duo(childB, next_agent_id)
                 next_agent_id += 2
-                push!(agent_list_ref, Ref(child1))
-                push!(agent_list_ref, Ref(child2))
-                push!(agent_list_ref, Ref(child3))
-                push!(agent_list_ref, Ref(child4))
+                # push children direct into output-array to safe time and also avoid 
+                # children being selected for reproduction immidiatly
+                push!(agent_list_result, child1)
+                push!(agent_list_result, child2)
+                push!(agent_list_result, child3)
+                push!(agent_list_result, child4)
             end
         end
 
-        agent_list_result::Vector{Agent} = []
 
         for a_ref in agent_list_ref
             push!(agent_list_result, a_ref[])
-
         end
         
         return agent_list_result, next_agent_id

@@ -28,6 +28,7 @@ end
 
 
 struct SensorInput
+    bias::Cfloat
     compass_north::Cfloat ## direction to y-axis with respect to current direction
     compass_center::Cfloat ## direction to world middle with respect to current direction
     speed::Cfloat
@@ -39,7 +40,7 @@ struct Desire
     accelerate::Cfloat ## change speed [-1,1]
 end
 # todo generate from struct
-num_sensors = 5 
+num_sensors = 6
 num_intentions = 2
 
 
