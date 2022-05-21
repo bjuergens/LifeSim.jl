@@ -167,18 +167,15 @@ module LSSimulation
         for i in 1:1
             if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
                 parent1, parent2 = samplepair(agent_list_ref)
-                child1, child2 = mutate_duo(parent1[], next_agent_id)
+                childA, childB = crossover_duo(parent1[], parent2[], next_agent_id)
+                child1, child2 = mutate_duo(childA, next_agent_id)
                 next_agent_id += 2
-                child3, child4 = mutate_duo(parent2[], next_agent_id)
-                next_agent_id += 2
-                child5, child6 = crossover_duo(parent1[], parent2[], next_agent_id)
+                child3, child4 = mutate_duo(childB, next_agent_id)
                 next_agent_id += 2
                 push!(agent_list_ref, Ref(child1))
                 push!(agent_list_ref, Ref(child2))
                 push!(agent_list_ref, Ref(child3))
                 push!(agent_list_ref, Ref(child4))
-                push!(agent_list_ref, Ref(child5))
-                push!(agent_list_ref, Ref(child6))
             end
         end
 
