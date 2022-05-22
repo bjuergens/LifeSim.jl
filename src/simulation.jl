@@ -267,10 +267,8 @@ module LSSimulation
 
         ctrlState = ctrlState_transfer[]
         simStep = simState_transfer[].last_step[]
-        last_request_revise = ctrlState.request.revise
-        last_request_play = ctrlState.request.play
-        last_request_pause = ctrlState.request.pause
-        last_request_pop_reset = ctrlState.request.pop_reset
+
+        last_request = deepcopy(ctrlState.request)
 
         last_tranfer = Base.time_ns()
         is_paused = false
@@ -281,28 +279,29 @@ module LSSimulation
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
             do_pop_reset = false
-            if last_request_revise != ctrlState.request.revise
-                if last_request_revise > ctrlState.request.revise
-                    @warn "unexpected request from the future" last_request_revise > ctrlState.request.revise
+
+            for request_name in fieldnames(ControlRequest)
+                old_val = getfield(last_request, request_name)
+                new_val = getfield(ctrlState.request, request_name)
+                if old_val < new_val
+                    @info "receive request: " * string(request_name)
+                    setfield!(last_request, request_name, new_val)
+                    if request_name==:revise
+                        revise()
+                    end
+                    if request_name==:play
+                        is_paused = false
+                    end
+                    if request_name==:pause
+                        is_paused = true
+                    end
+                    if request_name==:pop_reset
+                        do_pop_reset = true
+                    end
                 end
-                @info "revise request received"
-                last_request_revise = ctrlState.request.revise
-                revise()
-            end
-            if last_request_play != ctrlState.request.play
-                @info "request_play received"
-                last_request_play = ctrlState.request.play
-                is_paused = false
-            end
-            if last_request_pause != ctrlState.request.pause
-                @info "request_pause received"
-                last_request_pause = ctrlState.request.pause
-                is_paused = true
-            end
-            if last_request_pop_reset != ctrlState.request.pop_reset
-                @info "request_pop_reset received"
-                last_request_pop_reset = ctrlState.request.pop_reset
-                do_pop_reset = true
+                if old_val > new_val
+                    @warn "unexpected request from the future" last_request.revise > ctrlState.request.revise
+                end
             end
 
             if is_paused
