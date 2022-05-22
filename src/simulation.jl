@@ -162,7 +162,6 @@ module LSSimulation
 
         # the actual handling of collision is singlethreaded for now, because they actually write stuff
         for (agent1_ref,agent2_ref) in collision_candidate
-            # @show "blubb"
             agent1 = agent1_ref[]
             agent2 = agent2_ref[]
 
@@ -182,7 +181,7 @@ module LSSimulation
         agent_list_result::Vector{Agent} = []
         
         for i in 1:50
-            if 0 < length(agent_list_ref) <= ctrlState.cull_minimum
+            if 0 < length(agent_list_ref) + length(agent_list_result) <= ctrlState.cull_minimum
                 parent1, parent2 = samplepair(agent_list_ref)
                 childA, childB = crossover_duo(parent1[], parent2[], next_agent_id)
                 child1, child2 = mutate_duo(childA, next_agent_id)
