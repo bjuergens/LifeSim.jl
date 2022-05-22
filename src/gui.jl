@@ -172,23 +172,17 @@ module LSGui
 
 
             CImGui.Separator()
-            CImGui.Button("REVISE") && begin 
-                @info "doing revise on gui"
-                revise()
-                @info "send revise request"
-                controlState[].request.revise += 1
-            end
-            CImGui.Button("PAUSE") && begin 
-                @info "send request.pause"
-                controlState[].request.pause += 1
-            end
-            CImGui.Button("PLAY") && begin 
-                @info "send request.play"
-                controlState[].request.play += 1
-            end
-            CImGui.Button("pop reset") && begin 
-                @info "send request.pop_reset"
-                controlState[].request.pop_reset += 1
+
+            for request_name in fieldnames(ControlRequest)
+                CImGui.Button("request " * string(request_name)) && begin 
+                    if request_name == :revise
+                        @info "doing revise on gui"
+                        revise()
+                    end
+                    @info "send request: " * string(request_name)
+                    old_val = getfield(controlState[].request, request_name)
+                    setfield!(controlState[].request, request_name, old_val + 1)
+                end
             end
             CImGui.Separator()
 
