@@ -206,13 +206,12 @@ module LSSimulation
     end
 
     "update internal simulation stat. publishes result to other threads. handles some ctrl-task"
-    function doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep::SimulationStep, add_agent_in_this_step_request, do_pop_reset)
+    function doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep::SimulationStep, do_pop_reset)
 
         if do_pop_reset
             agentList, next_agent_id = init_population(simStep.next_agent_id, ctrlState=ctrlState)
             step_of_last_cull = simStep.num_step
         else
-        # first part: update actual state
             agentList, next_agent_id = update_agents(simStep, ctrlState, simStep.next_agent_id)
 
             step_of_last_cull = simStep.step_of_last_cull
@@ -230,13 +229,6 @@ module LSSimulation
                 # todo: make some mutation
             end
 
-            if add_agent_in_this_step_request
-                @warn "not implemented"
-                # push!(agentList, Agent(next_agent_id,pos=Vec2(0.3, 0.3),direction_angle=pi/2, size=0.1, speed=0.04, color=IM_COL32(50,11,0,255)))
-                # next_agent_id+=1
-            end
-
-            # second part: perform meta-tasks around simulation step
             
         end
         last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000000
@@ -278,7 +270,6 @@ module LSSimulation
         last_request_revise = ctrlState.request_revise
         last_request_play = ctrlState.request_play
         last_request_pause = ctrlState.request_pause
-        last_request_add_agent = ctrlState.request_add_agent
         last_request_pop_reset = ctrlState.request_pop_reset
 
         last_tranfer = Base.time_ns()
@@ -289,7 +280,6 @@ module LSSimulation
 
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
-            add_agent_in_this_step_request = false
             do_pop_reset = false
             if last_request_revise != ctrlState.request_revise
                 if last_request_revise > ctrlState.request_revise
@@ -309,11 +299,6 @@ module LSSimulation
                 last_request_pause = ctrlState.request_pause
                 is_paused = true
             end
-            if last_request_add_agent != ctrlState.request_add_agent
-                @info "request_add_agent received"
-                last_request_add_agent = ctrlState.request_add_agent
-                add_agent_in_this_step_request = true
-            end
             if last_request_pop_reset != ctrlState.request_pop_reset
                 @info "request_pop_reset received"
                 last_request_pop_reset = ctrlState.request_pop_reset
@@ -326,9 +311,9 @@ module LSSimulation
             end
 
             if hotloading
-                simStep = Base.@invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+                simStep = Base.@invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, do_pop_reset)
             else
-                simStep =               doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, add_agent_in_this_step_request, do_pop_reset)
+                simStep =               doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, do_pop_reset)
             end
             if last_tranfer + 10*15*1000*1000 < Base.time_ns() 
                 lock(lk_sim)

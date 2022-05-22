@@ -100,15 +100,14 @@ mutable struct ControlState
     request_revise::Int
     request_pause::Int
     request_play::Int
-    request_add_agent::Int
     request_pop_reset::Int
 
     ControlState(; is_stop=false, min_frame_time=100, cull_minimum=100, cull_frequency=100, cull_ratio=0.6, 
             mutation_sigma=0.021,
-            request_revise=1,request_pause=1, request_play=1,request_add_agent=1, request_pop_reset=1) =
+            request_revise=1,request_pause=1, request_play=1, request_pop_reset=1) =
         new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_ratio,
             mutation_sigma,
-            request_revise,  request_pause,   request_play,  request_add_agent, request_pop_reset)
+            request_revise,  request_pause,   request_play,  request_pop_reset)
     # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end
 

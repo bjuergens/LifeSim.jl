@@ -186,10 +186,6 @@ module LSGui
                 @info "send request_play"
                 controlState[].request_play += 1
             end
-            CImGui.Button("add agent") && begin 
-                @info "send request_add_agent"
-                controlState[].request_add_agent += 1
-            end
             CImGui.Button("pop reset") && begin 
                 @info "send request_pop_reset"
                 controlState[].request_pop_reset += 1
