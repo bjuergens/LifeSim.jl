@@ -267,10 +267,10 @@ module LSSimulation
 
         ctrlState = ctrlState_transfer[]
         simStep = simState_transfer[].last_step[]
-        last_request_revise = ctrlState.request_revise
-        last_request_play = ctrlState.request_play
-        last_request_pause = ctrlState.request_pause
-        last_request_pop_reset = ctrlState.request_pop_reset
+        last_request_revise = ctrlState.request.revise
+        last_request_play = ctrlState.request.play
+        last_request_pause = ctrlState.request.pause
+        last_request_pop_reset = ctrlState.request.pop_reset
 
         last_tranfer = Base.time_ns()
         is_paused = false
@@ -281,27 +281,27 @@ module LSSimulation
             last_time_ns = Base.time_ns()
             ctrlState = ctrlState_transfer[]
             do_pop_reset = false
-            if last_request_revise != ctrlState.request_revise
-                if last_request_revise > ctrlState.request_revise
-                    @warn "unexpected request from the future" last_request_revise > ctrlState.request_revise
+            if last_request_revise != ctrlState.request.revise
+                if last_request_revise > ctrlState.request.revise
+                    @warn "unexpected request from the future" last_request_revise > ctrlState.request.revise
                 end
                 @info "revise request received"
-                last_request_revise = ctrlState.request_revise
+                last_request_revise = ctrlState.request.revise
                 revise()
             end
-            if last_request_play != ctrlState.request_play
+            if last_request_play != ctrlState.request.play
                 @info "request_play received"
-                last_request_play = ctrlState.request_play
+                last_request_play = ctrlState.request.play
                 is_paused = false
             end
-            if last_request_pause != ctrlState.request_pause
+            if last_request_pause != ctrlState.request.pause
                 @info "request_pause received"
-                last_request_pause = ctrlState.request_pause
+                last_request_pause = ctrlState.request.pause
                 is_paused = true
             end
-            if last_request_pop_reset != ctrlState.request_pop_reset
+            if last_request_pop_reset != ctrlState.request.pop_reset
                 @info "request_pop_reset received"
-                last_request_pop_reset = ctrlState.request_pop_reset
+                last_request_pop_reset = ctrlState.request.pop_reset
                 do_pop_reset = true
             end
 
@@ -343,9 +343,6 @@ using CImGui: IM_COL32
 
 
 function run_headless(max_time)
-
-    # todo: extract to method, because DRY
-    # test_simState = deepcopy(simState)
     test_ctrlState = ControlState()
     test_simState = initial_sim_state(ctrlState = test_ctrlState)
     ctrlThread = Threads.@spawn begin
@@ -358,7 +355,6 @@ function run_headless(max_time)
 end
 
 function applyMakeSensor(pos, dir)
-    
     tAgent1 = Agent(1, init_random_network(2, 3, 4), pos=pos, direction_angle=dir)  
     result = LSSimulation.makeSensorInput(tAgent1)
     @test result.compass_north > 0

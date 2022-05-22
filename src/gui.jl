@@ -176,19 +176,19 @@ module LSGui
                 @info "doing revise on gui"
                 revise()
                 @info "send revise request"
-                controlState[].request_revise += 1
+                controlState[].request.revise += 1
             end
             CImGui.Button("PAUSE") && begin 
-                @info "send request_pause"
-                controlState[].request_pause += 1
+                @info "send request.pause"
+                controlState[].request.pause += 1
             end
             CImGui.Button("PLAY") && begin 
-                @info "send request_play"
-                controlState[].request_play += 1
+                @info "send request.play"
+                controlState[].request.play += 1
             end
             CImGui.Button("pop reset") && begin 
-                @info "send request_pop_reset"
-                controlState[].request_pop_reset += 1
+                @info "send request.pop_reset"
+                controlState[].request.pop_reset += 1
             end
             CImGui.Separator()
 

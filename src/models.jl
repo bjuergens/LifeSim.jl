@@ -6,7 +6,7 @@ end
 
 module LSModels
 
-export Agent, SensorData, split_color
+export Agent, SensorData, split_color, ControlRequest
 export SimulationState, ControlState, SimulationStep, Vec2
 
 export SensorInput, Desire, num_sensors, num_intentions # use to init brains for initial population
@@ -89,6 +89,14 @@ mutable struct SimulationState
     last_step::Ref{SimulationStep}
 end
 
+mutable struct ControlRequest
+    revise::Int
+    pause::Int
+    play::Int
+    pop_reset::Int
+    ControlRequest() = new(1,1,1,1)
+end
+
 "info sent from gui to sim"
 mutable struct ControlState
     is_stop::Bool
@@ -97,17 +105,12 @@ mutable struct ControlState
     cull_frequency::Cfloat
     cull_ratio::Cfloat
     mutation_sigma::Cfloat
-    request_revise::Int
-    request_pause::Int
-    request_play::Int
-    request_pop_reset::Int
+    request::ControlRequest
 
     ControlState(; is_stop=false, min_frame_time=100, cull_minimum=100, cull_frequency=100, cull_ratio=0.6, 
-            mutation_sigma=0.021,
-            request_revise=1,request_pause=1, request_play=1, request_pop_reset=1) =
+            mutation_sigma=0.021) =
         new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_ratio,
-            mutation_sigma,
-            request_revise,  request_pause,   request_play,  request_pop_reset)
+            mutation_sigma, ControlRequest())
     # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end
 
