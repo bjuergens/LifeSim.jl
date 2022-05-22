@@ -179,9 +179,9 @@ module LSGui
                         @info "doing revise on gui"
                         revise()
                     end
-                    @info "send request: " * string(request_name)
                     old_val = getfield(controlState[].request, request_name)
                     setfield!(controlState[].request, request_name, old_val + 1)
+                    @info "request sent: " * string(request_name)
                 end
             end
             CImGui.Separator()

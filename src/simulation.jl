@@ -197,7 +197,6 @@ module LSSimulation
             end
         end
 
-
         for a_ref in agent_list_ref
             push!(agent_list_result, a_ref[])
         end
@@ -213,11 +212,9 @@ module LSSimulation
             step_of_last_cull = simStep.num_step
         else
             agentList, next_agent_id = update_agents(simStep, ctrlState, simStep.next_agent_id)
-
             step_of_last_cull = simStep.step_of_last_cull
 
             if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
-
                 if length(agentList) > ctrlState.cull_minimum
                     step_of_last_cull=simStep.num_step
                     cull_num::Int = floor( length(agentList) * ctrlState.cull_ratio)
@@ -225,11 +222,7 @@ module LSSimulation
                 else
                     @info "not enough population to cull"
                 end
-                # todo: make some cross-overs
-                # todo: make some mutation
             end
-
-            
         end
         last_frame_time_ms = (Base.time_ns()-last_time_ns) / 1000000
         time_to_wait_s = (ctrlState.min_frametime_ms - last_frame_time_ms) / 1000
@@ -284,19 +277,18 @@ module LSSimulation
                 old_val = getfield(last_request, request_name)
                 new_val = getfield(ctrlState.request, request_name)
                 if old_val < new_val
-                    @info "receive request: " * string(request_name)
+                    @info "request received: " * string(request_name)
                     setfield!(last_request, request_name, new_val)
                     if request_name==:revise
                         revise()
-                    end
-                    if request_name==:play
+                    elseif request_name==:play
                         is_paused = false
-                    end
-                    if request_name==:pause
+                    elseif request_name==:pause
                         is_paused = true
-                    end
-                    if request_name==:pop_reset
+                    elseif request_name==:pop_reset
                         do_pop_reset = true
+                    else 
+                        @warn "unexpected request type " * string(request_name)
                     end
                 end
                 if old_val > new_val
@@ -312,7 +304,7 @@ module LSSimulation
             if hotloading
                 simStep = Base.@invokelatest doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, do_pop_reset)
             else
-                simStep =               doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, do_pop_reset)
+                simStep =                    doSimulationStep(last_time_ns, ctrlState, lk_sim, simStep, do_pop_reset)
             end
             if last_tranfer + 10*15*1000*1000 < Base.time_ns() 
                 lock(lk_sim)
