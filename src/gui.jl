@@ -186,9 +186,9 @@ module LSGui
             end
             CImGui.Separator()
 
-            cull_minimum = Ref(controlState[].cull_minimum)
-            CImGui.SliderInt("cull_minimum", cull_minimum, 10, 500)
-            controlState[].cull_minimum = cull_minimum[]
+            max_population = Ref(controlState[].max_population)
+            CImGui.SliderInt("max_population", max_population, 10, 500)
+            controlState[].max_population = max_population[]
 
             cull_frequency = Ref(controlState[].cull_frequency)
             CImGui.SliderFloat("cull_frequency", cull_frequency, 1, 200)

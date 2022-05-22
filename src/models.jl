@@ -101,15 +101,15 @@ end
 mutable struct ControlState
     is_stop::Bool
     min_frametime_ms::Cfloat
-    cull_minimum::Cint
+    max_population::Cint
     cull_frequency::Cfloat
     cull_ratio::Cfloat
     mutation_sigma::Cfloat
     request::ControlRequest
 
-    ControlState(; is_stop=false, min_frame_time=100, cull_minimum=100, cull_frequency=100, cull_ratio=0.6, 
+    ControlState(; is_stop=false, min_frame_time=100, max_population=100, cull_frequency=100, cull_ratio=0.6, 
             mutation_sigma=0.021) =
-        new(       is_stop,        min_frame_time,    cull_minimum,   cull_frequency,     cull_ratio,
+        new(       is_stop,        min_frame_time,    max_population,   cull_frequency,     cull_ratio,
             mutation_sigma, ControlRequest())
     # ControlState() = new(Cfloat[sin(x) for x in 0:0.05:2pi], false, 1.0, 50.0, 2, 2, 2, 2)
 end

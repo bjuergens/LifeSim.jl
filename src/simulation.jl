@@ -181,7 +181,7 @@ module LSSimulation
         agent_list_result::Vector{Agent} = []
         
         for i in 1:50
-            if 0 < length(agent_list_ref) + length(agent_list_result) <= ctrlState.cull_minimum
+            if 0 < length(agent_list_ref) + length(agent_list_result) <= ctrlState.max_population
                 parent1, parent2 = samplepair(agent_list_ref)
                 childA, childB = crossover_duo(parent1[], parent2[], next_agent_id)
                 child1, child2 = mutate_duo(childA, next_agent_id)
@@ -215,7 +215,7 @@ module LSSimulation
             step_of_last_cull = simStep.step_of_last_cull
 
             if 0 == mod(simStep.num_step, floor(ctrlState.cull_frequency))
-                if length(agentList) > ctrlState.cull_minimum
+                if length(agentList) > ctrlState.max_population
                     step_of_last_cull=simStep.num_step
                     cull_num::Int = floor( length(agentList) * ctrlState.cull_ratio)
                     agentList = cull!(agentList,cull_num)
@@ -237,7 +237,7 @@ module LSSimulation
 
     function init_population(next_agent_id; ctrlState::ControlState)
         num_hidden=10
-        num_agents = ctrlState.cull_minimum
+        num_agents = ctrlState.max_population
         agent_list = []
         for i in 1:num_agents
             color = IM_COL32(0, floor(i*255/num_agents),floor(i*255/num_agents),255)
