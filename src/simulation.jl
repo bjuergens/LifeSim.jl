@@ -62,20 +62,18 @@ module LSSimulation
         input_data = flatten(input)
         input_vector =  SVector{length(input_data),Float32}(input_data)
         desire_data = step!(brain, input_vector)    
-        return Desire(desire_data[1], desire_data[2])
+        return Desire(rotate= desire_data[1], accelerate= desire_data[2])
     end
 
     function makeSensorInput(aAgent)
         # direction-angle points east because that's where the x-axis is
         compass_north  = aAgent.direction_angle + pi/2 
         compass_center = aAgent.direction_angle - direction(aAgent.pos, WORLD_CENTER)
-
         return SensorInput(
-            Cfloat(1.0), 
-            wrap(compass_north ,0, 2pi), 
-            wrap(compass_center,0, 2pi), 
-            aAgent.speed, 
-            aAgent.pos
+            compass_north= wrap(compass_north ,0, 2pi), 
+            compass_center= wrap(compass_center,0, 2pi), 
+            speed= aAgent.speed, 
+            pos= aAgent.pos
             )
     end
 
@@ -86,7 +84,8 @@ module LSSimulation
         else
             rotate_desire  =-1.0 
         end
-        return Desire(rotate_desire, move_desire)
+        return Desire(rotate= rotate_desire, 
+                      accelerate= move_desire)
     end
 
 

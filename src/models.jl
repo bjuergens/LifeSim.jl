@@ -14,6 +14,7 @@ export SensorInput, Desire, num_sensors, num_intentions # use to init brains for
 
 using CImGui: IM_COL32
 using StaticArrays
+using Flatten
 using ..LSLin
 using ..LSNaturalNet
 
@@ -33,16 +34,22 @@ struct SensorInput
     compass_center::Cfloat ## direction to world middle with respect to current direction
     speed::Cfloat
     pos::Vec2
+    # dummy-constructor needed to calculate num_sensors easier
+    # dummyvalue v needed to avoid warning about redefinition
+    SensorInput(v) = new(v,v,v,v,Vec2(v,v))
+    SensorInput(;compass_north,compass_center,speed,pos) = new(1, compass_north,compass_center,speed,pos)
 end
 
 struct Desire
     rotate::Cfloat ## relative desired rotation, in [-1,1]
     accelerate::Cfloat ## change speed [-1,1]
+    # dummy-constructor needed to calculate num_intentions easier
+    Desire(v) = new(v,v)
+    Desire(;rotate, accelerate) = new(rotate,accelerate)
 end
-# todo generate from struct
-num_sensors = 6
-num_intentions = 2
 
+num_sensors = length(flatten(SensorInput(1)))
+num_intentions = length(flatten(Desire(1)))
 
 
 "a single individual at a specific point in time"
@@ -144,7 +151,7 @@ function doTest()
     @test a == 4
 
     # WIP
-    some_input = SensorInput(1,2,3,Vec2(4,5))
+    some_input = SensorInput(compass_north=1,compass_center=2,speed= 3,pos=Vec2(4,5))
     #after_convert = convert(SVector, some_input)
     #@test after_convert == (1,2,3,4,5)
 
