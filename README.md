@@ -36,6 +36,12 @@ to run individual files directly from VSCode:
 
 ## hotloading in REPL
 
+```bash
+mkdir ~/.julia/config
+echo 'using Revise' >> ~/.julia/config/startup.jl 
+echo '@info "startupfile loaded" ' >> ~/.julia/config/startup.jl 
+```
+
 ```julia
 using Revise
 import LifeSim.LSEvolutionTest.doTest
